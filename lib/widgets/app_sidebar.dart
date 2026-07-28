@@ -1,0 +1,267 @@
+import 'package:flutter/material.dart';
+
+import '../models/employee.dart';
+import '../theme.dart';
+
+enum SidebarItem { dashboard, leaveBalance, payroll, profile }
+
+extension SidebarItemDetails on SidebarItem {
+  String get label => switch (this) {
+        SidebarItem.dashboard => 'Dashboard',
+        SidebarItem.leaveBalance => 'Leave Balance',
+        SidebarItem.payroll => 'Payroll',
+        SidebarItem.profile => 'Profile',
+      };
+
+  IconData get icon => switch (this) {
+        SidebarItem.dashboard => Icons.dashboard_outlined,
+        SidebarItem.leaveBalance => Icons.event_available_outlined,
+        SidebarItem.payroll => Icons.payments_outlined,
+        SidebarItem.profile => Icons.person_outline,
+      };
+
+  IconData get selectedIcon => switch (this) {
+        SidebarItem.dashboard => Icons.dashboard,
+        SidebarItem.leaveBalance => Icons.event_available,
+        SidebarItem.payroll => Icons.payments,
+        SidebarItem.profile => Icons.person,
+      };
+}
+
+class AppSidebar extends StatelessWidget {
+  const AppSidebar({
+    super.key,
+    required this.employee,
+    required this.selected,
+    required this.onSelect,
+    required this.onLogout,
+  });
+
+  final Employee employee;
+  final SidebarItem selected;
+  final ValueChanged<SidebarItem> onSelect;
+  final VoidCallback onLogout;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: navyBlue,
+      child: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const CircleAvatar(
+                    radius: 26,
+                    backgroundColor: Colors.transparent,
+                    backgroundImage:
+                        AssetImage('assets/images/capiz_logo.png'),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text(
+                          'ELSSM',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Employee Self-Service Leave Monitoring System',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w500,
+                            height: 1.3,
+                            color: Colors.white.withValues(alpha: 0.7),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Divider(height: 1, color: Colors.white.withValues(alpha: 0.15)),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                children: [
+                  for (final item in SidebarItem.values)
+                    _SidebarTile(
+                      item: item,
+                      isSelected: item == selected,
+                      onTap: () => onSelect(item),
+                    ),
+                ],
+              ),
+            ),
+            Divider(height: 1, color: Colors.white.withValues(alpha: 0.15)),
+            _UserFooter(employee: employee, onLogout: onLogout),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SidebarTile extends StatelessWidget {
+  const _SidebarTile({
+    required this.item,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  final SidebarItem item;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Material(
+        color: isSelected ? taupe : Colors.transparent,
+        borderRadius: BorderRadius.circular(12),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              children: [
+                Icon(
+                  isSelected ? item.selectedIcon : item.icon,
+                  size: 22,
+                  color: isSelected ? navyBlue : Colors.white70,
+                ),
+                const SizedBox(width: 14),
+                Text(
+                  item.label,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                    color: isSelected ? navyBlue : Colors.white70,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _UserFooter extends StatelessWidget {
+  const _UserFooter({required this.employee, required this.onLogout});
+
+  final Employee employee;
+  final VoidCallback onLogout;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+            child: Row(
+              children: [
+                CircleAvatar(
+                  radius: 20,
+                  backgroundColor: taupe,
+                  backgroundImage: employee.avatarUrl != null
+                      ? NetworkImage(employee.avatarUrl!)
+                      : null,
+                  child: employee.avatarUrl == null
+                      ? Text(
+                          employee.initials,
+                          style: const TextStyle(
+                            color: navyBlue,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        )
+                      : null,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        employee.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                          color: Colors.white,
+                        ),
+                      ),
+                      Text(
+                        employee.officeName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.white.withValues(alpha: 0.7),
+                        ),
+                      ),
+                      Text(
+                        employee.position,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.white.withValues(alpha: 0.7),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 4),
+          Material(
+            color: Colors.transparent,
+            borderRadius: BorderRadius.circular(12),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(12),
+              onTap: onLogout,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                child: Row(
+                  children: [
+                    const Icon(Icons.logout, size: 20, color: Colors.redAccent),
+                    const SizedBox(width: 14),
+                    Text(
+                      'Logout',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.redAccent.shade100,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
