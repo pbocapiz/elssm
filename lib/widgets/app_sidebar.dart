@@ -11,6 +11,7 @@ enum SidebarItem {
   manageStartingCredits,
   leaveRecords,
   leaveCreditReport,
+  members,
 }
 
 /// The SidebarItems grouped under the "Leave Credits" expandable menu in
@@ -21,6 +22,9 @@ const leaveCreditsGroupItems = [
   SidebarItem.leaveCreditReport,
 ];
 
+/// SidebarItems only shown to Admins and Approvers (accesslevel <= 2).
+const _approverAndAdminOnlyItems = [...leaveCreditsGroupItems, SidebarItem.members];
+
 extension SidebarItemDetails on SidebarItem {
   String get label => switch (this) {
     SidebarItem.dashboard => 'Dashboard',
@@ -30,6 +34,7 @@ extension SidebarItemDetails on SidebarItem {
     SidebarItem.manageStartingCredits => 'Starting Credits',
     SidebarItem.leaveRecords => 'Leave Records',
     SidebarItem.leaveCreditReport => 'Credit Report',
+    SidebarItem.members => 'Members',
   };
 
   IconData get icon => switch (this) {
@@ -40,6 +45,7 @@ extension SidebarItemDetails on SidebarItem {
     SidebarItem.manageStartingCredits => Icons.edit_calendar_outlined,
     SidebarItem.leaveRecords => Icons.receipt_long_outlined,
     SidebarItem.leaveCreditReport => Icons.bar_chart_outlined,
+    SidebarItem.members => Icons.group_outlined,
   };
 
   IconData get selectedIcon => switch (this) {
@@ -50,15 +56,16 @@ extension SidebarItemDetails on SidebarItem {
     SidebarItem.manageStartingCredits => Icons.edit_calendar,
     SidebarItem.leaveRecords => Icons.receipt_long,
     SidebarItem.leaveCreditReport => Icons.bar_chart,
+    SidebarItem.members => Icons.group,
   };
 }
 
 /// Sidebar items visible for a given accesslevel (1=Admin, 2=Approver,
 /// 3=Employee). Only Admins and Approvers see the Leave Credits group
-/// (Starting Credits, Leave Records).
+/// (Starting Credits, Leave Records, Credit Report) and Members.
 List<SidebarItem> sidebarItemsForAccessLevel(int accessLevel) => [
   for (final item in SidebarItem.values)
-    if (!leaveCreditsGroupItems.contains(item) || accessLevel <= 2) item,
+    if (!_approverAndAdminOnlyItems.contains(item) || accessLevel <= 2) item,
 ];
 
 class AppSidebar extends StatelessWidget {
