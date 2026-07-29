@@ -1,0 +1,13 @@
+# Netlify has no Flutter SDK preinstalled, so the build command fetches the
+# stable channel first (matches this project's local Flutter version --
+# 3.44.8 at the time this was written) before building the web release.
+[build]
+  command = "git clone https://github.com/flutter/flutter.git --depth 1 -b stable _flutter && export PATH=\"$PATH:$(pwd)/_flutter/bin\" && flutter config --enable-web && flutter pub get && flutter build web --release"
+  publish = "build/web"
+
+# Single-page app: any deep link should still resolve to index.html instead
+# of a Netlify 404, even though the app doesn't use named routes yet.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
