@@ -10,13 +10,15 @@ enum SidebarItem {
   profile,
   manageStartingCredits,
   leaveRecords,
+  leaveCreditReport,
 }
 
-/// The two SidebarItems grouped under the "Leave Credits" expandable menu
-/// in the sidebar, instead of appearing as flat top-level items.
+/// The SidebarItems grouped under the "Leave Credits" expandable menu in
+/// the sidebar, instead of appearing as flat top-level items.
 const leaveCreditsGroupItems = [
   SidebarItem.manageStartingCredits,
   SidebarItem.leaveRecords,
+  SidebarItem.leaveCreditReport,
 ];
 
 extension SidebarItemDetails on SidebarItem {
@@ -27,6 +29,7 @@ extension SidebarItemDetails on SidebarItem {
     SidebarItem.profile => 'Profile',
     SidebarItem.manageStartingCredits => 'Starting Credits',
     SidebarItem.leaveRecords => 'Leave Records',
+    SidebarItem.leaveCreditReport => 'Credit Report',
   };
 
   IconData get icon => switch (this) {
@@ -36,6 +39,7 @@ extension SidebarItemDetails on SidebarItem {
     SidebarItem.profile => Icons.person_outline,
     SidebarItem.manageStartingCredits => Icons.edit_calendar_outlined,
     SidebarItem.leaveRecords => Icons.receipt_long_outlined,
+    SidebarItem.leaveCreditReport => Icons.bar_chart_outlined,
   };
 
   IconData get selectedIcon => switch (this) {
@@ -45,6 +49,7 @@ extension SidebarItemDetails on SidebarItem {
     SidebarItem.profile => Icons.person,
     SidebarItem.manageStartingCredits => Icons.edit_calendar,
     SidebarItem.leaveRecords => Icons.receipt_long,
+    SidebarItem.leaveCreditReport => Icons.bar_chart,
   };
 }
 
@@ -144,7 +149,7 @@ class AppSidebar extends StatelessWidget {
                             ),
                         ],
                       )
-                    else if (item != SidebarItem.leaveRecords)
+                    else if (!leaveCreditsGroupItems.contains(item))
                       _SidebarTile(
                         item: item,
                         isSelected: item == selected,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'leave_balance_page.dart';
+import 'leave_credit_report_page.dart';
 import 'leave_history_page.dart';
 import 'leave_records_page.dart';
 import 'models/employee.dart';
@@ -162,6 +163,13 @@ class _ContentArea extends StatelessWidget {
       return Container(
         color: colorScheme.surface,
         child: const LeaveRecordsPage(),
+      );
+    }
+
+    if (selected == SidebarItem.leaveCreditReport) {
+      return Container(
+        color: colorScheme.surface,
+        child: const LeaveCreditReportPage(),
       );
     }
 
