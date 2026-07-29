@@ -31,21 +31,46 @@ class _LoginPageState extends State<LoginPage> {
 
     setState(() => _isSubmitting = true);
     try {
-      await Supabase.instance.client.auth.signInWithPassword(
+      final response = await Supabase.instance.client.auth.signInWithPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text,
       );
+
+      final userId = response.user?.id;
+      final profile = userId == null
+          ? null
+          : await Supabase.instance.client
+                .from('users')
+                .select('is_active')
+                .eq('id', userId)
+                .maybeSingle();
+      final isActive = profile?['is_active'] == true;
+
+      if (!isActive) {
+        await Supabase.instance.client.auth.signOut();
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Your account is pending activation. Please contact the administrator.',
+            ),
+          ),
+        );
+        return;
+      }
       // No manual navigation: AuthGate listens for the auth state change
       // and swaps to HomePage on its own.
     } on AuthException catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error.message)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error.message)));
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Something went wrong. Please try again.')),
+        const SnackBar(
+          content: Text('Something went wrong. Please try again.'),
+        ),
       );
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
@@ -53,9 +78,9 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void _goToSignUp() {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (context) => const SignUpPage()),
-    );
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (context) => const SignUpPage()));
   }
 
   @override

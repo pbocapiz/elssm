@@ -3,27 +3,29 @@ import 'package:flutter/material.dart';
 const navyBlue = Color(0xFF16223B);
 const taupe = Color(0xFFC9B79C);
 
-Color _tint(Color base, double amount) => Color.lerp(base, Colors.white, amount)!;
+Color _tint(Color base, double amount) =>
+    Color.lerp(base, Colors.white, amount)!;
 
 ThemeData buildAppTheme() {
-  final colorScheme = ColorScheme.fromSeed(
-    seedColor: navyBlue,
-    brightness: Brightness.light,
-  ).copyWith(
-    primary: navyBlue,
-    onPrimary: Colors.white,
-    primaryContainer: _tint(navyBlue, 0.85),
-    onPrimaryContainer: navyBlue,
-    secondary: taupe,
-    onSecondary: navyBlue,
-    secondaryContainer: _tint(taupe, 0.55),
-    onSecondaryContainer: navyBlue,
-    surface: Colors.white,
-    surfaceContainerLow: _tint(navyBlue, 0.96),
-    surfaceContainer: _tint(navyBlue, 0.94),
-    surfaceContainerHigh: _tint(navyBlue, 0.9),
-    outlineVariant: _tint(navyBlue, 0.8),
-  );
+  final colorScheme =
+      ColorScheme.fromSeed(
+        seedColor: navyBlue,
+        brightness: Brightness.light,
+      ).copyWith(
+        primary: navyBlue,
+        onPrimary: Colors.white,
+        primaryContainer: _tint(navyBlue, 0.85),
+        onPrimaryContainer: navyBlue,
+        secondary: taupe,
+        onSecondary: navyBlue,
+        secondaryContainer: _tint(taupe, 0.55),
+        onSecondaryContainer: navyBlue,
+        surface: Colors.white,
+        surfaceContainerLow: _tint(navyBlue, 0.96),
+        surfaceContainer: _tint(navyBlue, 0.94),
+        surfaceContainerHigh: _tint(navyBlue, 0.9),
+        outlineVariant: _tint(navyBlue, 0.8),
+      );
 
   return ThemeData(
     useMaterial3: true,

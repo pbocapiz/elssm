@@ -3,41 +3,71 @@ import 'package:flutter/material.dart';
 import '../models/employee.dart';
 import '../theme.dart';
 
-enum SidebarItem { dashboard, leaveBalance, payroll, profile }
+enum SidebarItem {
+  dashboard,
+  leaveBalance,
+  payroll,
+  profile,
+  manageStartingCredits,
+  leaveRecords,
+}
+
+/// The two SidebarItems grouped under the "Leave Credits" expandable menu
+/// in the sidebar, instead of appearing as flat top-level items.
+const leaveCreditsGroupItems = [
+  SidebarItem.manageStartingCredits,
+  SidebarItem.leaveRecords,
+];
 
 extension SidebarItemDetails on SidebarItem {
   String get label => switch (this) {
-        SidebarItem.dashboard => 'Dashboard',
-        SidebarItem.leaveBalance => 'Leave Balance',
-        SidebarItem.payroll => 'Payroll',
-        SidebarItem.profile => 'Profile',
-      };
+    SidebarItem.dashboard => 'Dashboard',
+    SidebarItem.leaveBalance => 'Leave Balance',
+    SidebarItem.payroll => 'Payroll',
+    SidebarItem.profile => 'Profile',
+    SidebarItem.manageStartingCredits => 'Starting Credits',
+    SidebarItem.leaveRecords => 'Leave Records',
+  };
 
   IconData get icon => switch (this) {
-        SidebarItem.dashboard => Icons.dashboard_outlined,
-        SidebarItem.leaveBalance => Icons.event_available_outlined,
-        SidebarItem.payroll => Icons.payments_outlined,
-        SidebarItem.profile => Icons.person_outline,
-      };
+    SidebarItem.dashboard => Icons.dashboard_outlined,
+    SidebarItem.leaveBalance => Icons.event_available_outlined,
+    SidebarItem.payroll => Icons.payments_outlined,
+    SidebarItem.profile => Icons.person_outline,
+    SidebarItem.manageStartingCredits => Icons.edit_calendar_outlined,
+    SidebarItem.leaveRecords => Icons.receipt_long_outlined,
+  };
 
   IconData get selectedIcon => switch (this) {
-        SidebarItem.dashboard => Icons.dashboard,
-        SidebarItem.leaveBalance => Icons.event_available,
-        SidebarItem.payroll => Icons.payments,
-        SidebarItem.profile => Icons.person,
-      };
+    SidebarItem.dashboard => Icons.dashboard,
+    SidebarItem.leaveBalance => Icons.event_available,
+    SidebarItem.payroll => Icons.payments,
+    SidebarItem.profile => Icons.person,
+    SidebarItem.manageStartingCredits => Icons.edit_calendar,
+    SidebarItem.leaveRecords => Icons.receipt_long,
+  };
 }
+
+/// Sidebar items visible for a given accesslevel (1=Admin, 2=Approver,
+/// 3=Employee). Only Admins and Approvers see the Leave Credits group
+/// (Starting Credits, Leave Records).
+List<SidebarItem> sidebarItemsForAccessLevel(int accessLevel) => [
+  for (final item in SidebarItem.values)
+    if (!leaveCreditsGroupItems.contains(item) || accessLevel <= 2) item,
+];
 
 class AppSidebar extends StatelessWidget {
   const AppSidebar({
     super.key,
     required this.employee,
+    required this.items,
     required this.selected,
     required this.onSelect,
     required this.onLogout,
   });
 
   final Employee employee;
+  final List<SidebarItem> items;
   final SidebarItem selected;
   final ValueChanged<SidebarItem> onSelect;
   final VoidCallback onLogout;
@@ -57,8 +87,7 @@ class AppSidebar extends StatelessWidget {
                   const CircleAvatar(
                     radius: 26,
                     backgroundColor: Colors.transparent,
-                    backgroundImage:
-                        AssetImage('assets/images/capiz_logo.png'),
+                    backgroundImage: AssetImage('assets/images/capiz_logo.png'),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -93,14 +122,34 @@ class AppSidebar extends StatelessWidget {
             Divider(height: 1, color: Colors.white.withValues(alpha: 0.15)),
             Expanded(
               child: ListView(
-                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 8,
+                  horizontal: 12,
+                ),
                 children: [
-                  for (final item in SidebarItem.values)
-                    _SidebarTile(
-                      item: item,
-                      isSelected: item == selected,
-                      onTap: () => onSelect(item),
-                    ),
+                  for (final item in items)
+                    if (item == SidebarItem.manageStartingCredits)
+                      _SidebarGroup(
+                        label: 'Leave Credits',
+                        icon: Icons.account_balance_wallet_outlined,
+                        isExpandedInitially: leaveCreditsGroupItems.contains(
+                          selected,
+                        ),
+                        children: [
+                          for (final groupItem in leaveCreditsGroupItems)
+                            _SidebarTile(
+                              item: groupItem,
+                              isSelected: groupItem == selected,
+                              onTap: () => onSelect(groupItem),
+                            ),
+                        ],
+                      )
+                    else if (item != SidebarItem.leaveRecords)
+                      _SidebarTile(
+                        item: item,
+                        isSelected: item == selected,
+                        onTap: () => onSelect(item),
+                      ),
                 ],
               ),
             ),
@@ -109,6 +158,79 @@ class AppSidebar extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _SidebarGroup extends StatefulWidget {
+  const _SidebarGroup({
+    required this.label,
+    required this.icon,
+    required this.isExpandedInitially,
+    required this.children,
+  });
+
+  final String label;
+  final IconData icon;
+  final bool isExpandedInitially;
+  final List<Widget> children;
+
+  @override
+  State<_SidebarGroup> createState() => _SidebarGroupState();
+}
+
+class _SidebarGroupState extends State<_SidebarGroup> {
+  late bool _expanded = widget.isExpandedInitially;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: Material(
+            color: Colors.transparent,
+            borderRadius: BorderRadius.circular(12),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(12),
+              onTap: () => setState(() => _expanded = !_expanded),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                child: Row(
+                  children: [
+                    Icon(widget.icon, size: 22, color: Colors.white70),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Text(
+                        widget.label,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.white70,
+                        ),
+                      ),
+                    ),
+                    Icon(
+                      _expanded ? Icons.expand_less : Icons.expand_more,
+                      size: 20,
+                      color: Colors.white70,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+        if (_expanded)
+          Padding(
+            padding: const EdgeInsets.only(left: 14),
+            child: Column(children: widget.children),
+          ),
+      ],
     );
   }
 }
@@ -242,7 +364,10 @@ class _UserFooter extends StatelessWidget {
               borderRadius: BorderRadius.circular(12),
               onTap: onLogout,
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 child: Row(
                   children: [
                     const Icon(Icons.logout, size: 20, color: Colors.redAccent),

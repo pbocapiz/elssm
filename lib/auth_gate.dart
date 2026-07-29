@@ -16,7 +16,10 @@ class AuthGate extends StatelessWidget {
 
     return StreamBuilder<AuthState>(
       stream: auth.onAuthStateChange,
-      initialData: AuthState(AuthChangeEvent.initialSession, auth.currentSession),
+      initialData: AuthState(
+        AuthChangeEvent.initialSession,
+        auth.currentSession,
+      ),
       builder: (context, snapshot) {
         final session = snapshot.data?.session ?? auth.currentSession;
         return session != null ? const HomePage() : const LoginPage();

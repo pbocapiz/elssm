@@ -4,12 +4,17 @@ class Employee {
     required this.officeName,
     required this.position,
     this.avatarUrl,
+    this.accessLevel = 3,
   });
 
   final String name;
   final String officeName;
   final String position;
   final String? avatarUrl;
+
+  /// 1 = Admin, 2 = Approver/Supervisor, 3 = Employee (default, least
+  /// privileged, in case a profile fails to load its real value).
+  final int accessLevel;
 
   String get initials {
     final parts = name.trim().split(RegExp(r'\s+'));
