@@ -12,6 +12,7 @@ enum SidebarItem {
   leaveRecords,
   leaveCreditReport,
   members,
+  terminalLeaveCalculator,
 }
 
 /// The SidebarItems grouped under the "Leave Credits" expandable menu in
@@ -35,6 +36,7 @@ extension SidebarItemDetails on SidebarItem {
     SidebarItem.leaveRecords => 'Leave Records',
     SidebarItem.leaveCreditReport => 'Credit Report',
     SidebarItem.members => 'Members',
+    SidebarItem.terminalLeaveCalculator => 'Leave Calculator',
   };
 
   IconData get icon => switch (this) {
@@ -46,6 +48,7 @@ extension SidebarItemDetails on SidebarItem {
     SidebarItem.leaveRecords => Icons.receipt_long_outlined,
     SidebarItem.leaveCreditReport => Icons.bar_chart_outlined,
     SidebarItem.members => Icons.group_outlined,
+    SidebarItem.terminalLeaveCalculator => Icons.calculate_outlined,
   };
 
   IconData get selectedIcon => switch (this) {
@@ -57,15 +60,21 @@ extension SidebarItemDetails on SidebarItem {
     SidebarItem.leaveRecords => Icons.receipt_long,
     SidebarItem.leaveCreditReport => Icons.bar_chart,
     SidebarItem.members => Icons.group,
+    SidebarItem.terminalLeaveCalculator => Icons.calculate,
   };
 }
 
 /// Sidebar items visible for a given accesslevel (1=Admin, 2=Approver,
 /// 3=Employee). Only Admins and Approvers see the Leave Credits group
-/// (Starting Credits, Leave Records, Credit Report) and Members.
+/// (Starting Credits, Leave Records, Credit Report) and Members. Profile
+/// is excluded from this list -- it's still a valid SidebarItem (routed to
+/// from the sidebar's user footer, see onTapProfile in _UserFooter), it's
+/// just not shown as its own nav tile.
 List<SidebarItem> sidebarItemsForAccessLevel(int accessLevel) => [
   for (final item in SidebarItem.values)
-    if (!_approverAndAdminOnlyItems.contains(item) || accessLevel <= 2) item,
+    if (item != SidebarItem.profile &&
+        (!_approverAndAdminOnlyItems.contains(item) || accessLevel <= 2))
+      item,
 ];
 
 class AppSidebar extends StatelessWidget {
@@ -166,7 +175,11 @@ class AppSidebar extends StatelessWidget {
               ),
             ),
             Divider(height: 1, color: Colors.white.withValues(alpha: 0.15)),
-            _UserFooter(employee: employee, onLogout: onLogout),
+            _UserFooter(
+              employee: employee,
+              onLogout: onLogout,
+              onTapProfile: () => onSelect(SidebarItem.profile),
+            ),
           ],
         ),
       ),
@@ -296,10 +309,15 @@ class _SidebarTile extends StatelessWidget {
 }
 
 class _UserFooter extends StatelessWidget {
-  const _UserFooter({required this.employee, required this.onLogout});
+  const _UserFooter({
+    required this.employee,
+    required this.onLogout,
+    required this.onTapProfile,
+  });
 
   final Employee employee;
   final VoidCallback onLogout;
+  final VoidCallback onTapProfile;
 
   @override
   Widget build(BuildContext context) {
@@ -308,64 +326,79 @@ class _UserFooter extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-            child: Row(
-              children: [
-                CircleAvatar(
-                  radius: 20,
-                  backgroundColor: taupe,
-                  backgroundImage: employee.avatarUrl != null
-                      ? NetworkImage(employee.avatarUrl!)
-                      : null,
-                  child: employee.avatarUrl == null
-                      ? Text(
-                          employee.initials,
-                          style: const TextStyle(
-                            color: navyBlue,
-                            fontWeight: FontWeight.bold,
+          Material(
+            color: Colors.transparent,
+            borderRadius: BorderRadius.circular(12),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(12),
+              onTap: onTapProfile,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 8,
+                ),
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 20,
+                      backgroundColor: taupe,
+                      backgroundImage: employee.avatarUrl != null
+                          ? NetworkImage(employee.avatarUrl!)
+                          : null,
+                      child: employee.avatarUrl == null
+                          ? Text(
+                              employee.initials,
+                              style: const TextStyle(
+                                color: navyBlue,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            )
+                          : null,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            employee.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                              color: Colors.white,
+                            ),
                           ),
-                        )
-                      : null,
+                          Text(
+                            employee.officeName,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.white.withValues(alpha: 0.7),
+                            ),
+                          ),
+                          Text(
+                            employee.position,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.white.withValues(alpha: 0.7),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Icon(
+                      Icons.chevron_right_rounded,
+                      color: Colors.white.withValues(alpha: 0.5),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        employee.name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 14,
-                          color: Colors.white,
-                        ),
-                      ),
-                      Text(
-                        employee.officeName,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.white.withValues(alpha: 0.7),
-                        ),
-                      ),
-                      Text(
-                        employee.position,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.white.withValues(alpha: 0.7),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
           const SizedBox(height: 4),

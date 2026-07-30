@@ -106,16 +106,79 @@ class _LeaveBalancePageState extends State<LeaveBalancePage> {
           );
         }
 
+        final overallAvailable = balances.fold<double>(
+          0,
+          (sum, b) => sum + b.availableBalance,
+        );
+
         return RefreshIndicator(
           onRefresh: _reload,
           child: ListView.builder(
             padding: const EdgeInsets.all(16),
-            itemCount: balances.length,
-            itemBuilder: (context, index) =>
-                _LeaveBalanceCard(balance: balances[index]),
+            itemCount: balances.length + 1,
+            itemBuilder: (context, index) {
+              if (index == 0) {
+                return _OverallBalanceCard(total: overallAvailable);
+              }
+              return _LeaveBalanceCard(balance: balances[index - 1]);
+            },
           ),
         );
       },
+    );
+  }
+}
+
+class _OverallBalanceCard extends StatelessWidget {
+  const _OverallBalanceCard({required this.total});
+
+  final double total;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: navyBlue,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: navyBlue.withValues(alpha: 0.28),
+            blurRadius: 24,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.baseline,
+        textBaseline: TextBaseline.alphabetic,
+        children: [
+          const Expanded(
+            child: Text(
+              'Overall Available Balance',
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
+              ),
+            ),
+          ),
+          Text(
+            total.toStringAsFixed(2),
+            style: const TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(width: 4),
+          Text(
+            'days',
+            style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.8)),
+          ),
+        ],
+      ),
     );
   }
 }

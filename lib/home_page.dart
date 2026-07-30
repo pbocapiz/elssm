@@ -10,13 +10,11 @@ import 'models/employee.dart';
 import 'opening_balance_management_page.dart';
 import 'profile_page.dart';
 import 'services/profile_service.dart';
+import 'terminal_leave_calculator_page.dart';
 import 'theme.dart';
 import 'widgets/app_sidebar.dart';
 
-const _wideLayoutBreakpoint = 800.0;
 const _sidebarWidth = 260.0;
-const _sidebarAnimationDuration = Duration(milliseconds: 260);
-const _sidebarAnimationCurve = Curves.easeInOutCubic;
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -29,7 +27,6 @@ class _HomePageState extends State<HomePage> {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
 
   SidebarItem _selected = SidebarItem.dashboard;
-  bool _sidebarOpen = true;
 
   static const _loadingEmployee = Employee(
     name: 'Loading…',
@@ -51,14 +48,9 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  void _selectItem(SidebarItem item, {required bool isWide}) {
-    setState(() {
-      _selected = item;
-      if (isWide) _sidebarOpen = false;
-    });
-    if (!isWide) {
-      _scaffoldKey.currentState?.closeDrawer();
-    }
+  void _selectItem(SidebarItem item) {
+    setState(() => _selected = item);
+    _scaffoldKey.currentState?.closeDrawer();
   }
 
   Future<void> _handleLogout() async {
@@ -76,56 +68,28 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isWide = constraints.maxWidth >= _wideLayoutBreakpoint;
+    final sidebar = AppSidebar(
+      employee: _employee,
+      items: sidebarItemsForAccessLevel(_employee.accessLevel),
+      selected: _selected,
+      onSelect: _selectItem,
+      onLogout: _handleLogout,
+    );
 
-        final sidebar = AppSidebar(
-          employee: _employee,
-          items: sidebarItemsForAccessLevel(_employee.accessLevel),
-          selected: _selected,
-          onSelect: (item) => _selectItem(item, isWide: isWide),
-          onLogout: _handleLogout,
-        );
-
-        return Scaffold(
-          key: _scaffoldKey,
-          appBar: AppBar(
-            backgroundColor: navyBlue,
-            foregroundColor: Colors.white,
-            title: Text(_selected.label),
-            leading: isWide
-                ? IconButton(
-                    icon: const Icon(Icons.menu),
-                    tooltip: _sidebarOpen ? 'Hide sidebar' : 'Show sidebar',
-                    onPressed: () =>
-                        setState(() => _sidebarOpen = !_sidebarOpen),
-                  )
-                : null,
-          ),
-          drawer: isWide ? null : Drawer(width: _sidebarWidth, child: sidebar),
-          body: Row(
-            children: [
-              if (isWide)
-                AnimatedContainer(
-                  duration: _sidebarAnimationDuration,
-                  curve: _sidebarAnimationCurve,
-                  width: _sidebarOpen ? _sidebarWidth : 0,
-                  clipBehavior: Clip.hardEdge,
-                  decoration: const BoxDecoration(),
-                  child: OverflowBox(
-                    minWidth: _sidebarWidth,
-                    maxWidth: _sidebarWidth,
-                    alignment: Alignment.centerLeft,
-                    child: sidebar,
-                  ),
-                ),
-              if (isWide && _sidebarOpen) const VerticalDivider(width: 1),
-              Expanded(child: _ContentArea(selected: _selected)),
-            ],
-          ),
-        );
-      },
+    return Scaffold(
+      key: _scaffoldKey,
+      appBar: AppBar(
+        backgroundColor: navyBlue,
+        foregroundColor: Colors.white,
+        title: Text(_selected.label),
+        leading: IconButton(
+          icon: const Icon(Icons.menu),
+          tooltip: 'Menu',
+          onPressed: () => _scaffoldKey.currentState?.openDrawer(),
+        ),
+      ),
+      drawer: Drawer(width: _sidebarWidth, child: sidebar),
+      body: _ContentArea(selected: _selected),
     );
   }
 }
@@ -185,6 +149,13 @@ class _ContentArea extends StatelessWidget {
       return Container(
         color: colorScheme.surface,
         child: const ProfilePage(),
+      );
+    }
+
+    if (selected == SidebarItem.terminalLeaveCalculator) {
+      return Container(
+        color: colorScheme.surface,
+        child: const TerminalLeaveCalculatorPage(),
       );
     }
 
