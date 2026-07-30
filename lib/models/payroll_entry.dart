@@ -62,4 +62,8 @@ class PayrollEntry {
   ];
 
   String get monthName => monthNames[month - 1];
+
+  /// Abbreviated for the payroll table, which needs Month, 1st, 2nd, Total,
+  /// and a save button to all fit on a narrow screen without scrolling.
+  String get monthShortName => monthName.substring(0, 3);
 }

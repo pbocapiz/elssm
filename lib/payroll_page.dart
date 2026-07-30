@@ -578,15 +578,15 @@ class _PayrollTable extends StatelessWidget {
         fontSize: 13,
       ),
       dividerThickness: 0,
-      columnSpacing: 28,
-      horizontalMargin: 20,
-      headingRowHeight: 52,
-      dataRowMinHeight: 56,
-      dataRowMaxHeight: 56,
+      columnSpacing: 12,
+      horizontalMargin: 12,
+      headingRowHeight: 44,
+      dataRowMinHeight: 52,
+      dataRowMaxHeight: 52,
       columns: [
         const DataColumn(label: Text('Month')),
-        const DataColumn(label: Text('1st Quincena'), numeric: true),
-        const DataColumn(label: Text('2nd Quincena'), numeric: true),
+        const DataColumn(label: Text('1st'), numeric: true),
+        const DataColumn(label: Text('2nd'), numeric: true),
         const DataColumn(label: Text('Total'), numeric: true),
         if (canEdit) const DataColumn(label: Text('')),
       ],
@@ -619,7 +619,7 @@ class _PayrollTable extends StatelessWidget {
                       const SizedBox(width: 8),
                     ],
                     Text(
-                      entry.monthName,
+                      entry.monthShortName,
                       style: const TextStyle(
                         fontWeight: FontWeight.w600,
                         color: navyBlue,
@@ -631,23 +631,24 @@ class _PayrollTable extends StatelessWidget {
               DataCell(
                 canEdit
                     ? SizedBox(
-                        width: 110,
+                        width: 78,
                         child: TextField(
                           controller: firstControllers[entry.month],
                           keyboardType: const TextInputType.numberWithOptions(
                             decimal: true,
                           ),
                           textAlign: TextAlign.right,
+                          style: const TextStyle(fontSize: 13),
                           decoration: InputDecoration(
                             isDense: true,
                             filled: true,
                             fillColor: _fieldFill,
                             contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 10,
+                              horizontal: 6,
+                              vertical: 8,
                             ),
                             border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10),
+                              borderRadius: BorderRadius.circular(8),
                               borderSide: BorderSide.none,
                             ),
                           ),
@@ -658,23 +659,24 @@ class _PayrollTable extends StatelessWidget {
               DataCell(
                 canEdit
                     ? SizedBox(
-                        width: 110,
+                        width: 78,
                         child: TextField(
                           controller: secondControllers[entry.month],
                           keyboardType: const TextInputType.numberWithOptions(
                             decimal: true,
                           ),
                           textAlign: TextAlign.right,
+                          style: const TextStyle(fontSize: 13),
                           decoration: InputDecoration(
                             isDense: true,
                             filled: true,
                             fillColor: _fieldFill,
                             contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 10,
+                              horizontal: 6,
+                              vertical: 8,
                             ),
                             border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10),
+                              borderRadius: BorderRadius.circular(8),
                               borderSide: BorderSide.none,
                             ),
                           ),
@@ -723,9 +725,14 @@ class _PayrollTable extends StatelessWidget {
                             icon: const Icon(
                               Icons.save_outlined,
                               color: navyBlue,
-                              size: 18,
+                              size: 16,
                             ),
-                            splashRadius: 18,
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(
+                              minWidth: 32,
+                              minHeight: 32,
+                            ),
+                            splashRadius: 16,
                             onPressed: () => onSave(entry.month),
                           ),
                         ),
