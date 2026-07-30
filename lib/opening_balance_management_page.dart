@@ -61,7 +61,7 @@ class _OpeningBalanceManagementPageState
                     () => TextEditingController(),
                   )
                   .text = balance.openingBalance.toStringAsFixed(
-                2,
+                3,
               );
             }
             return balances;

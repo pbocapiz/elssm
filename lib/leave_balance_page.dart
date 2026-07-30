@@ -106,10 +106,15 @@ class _LeaveBalancePageState extends State<LeaveBalancePage> {
           );
         }
 
-        final overallAvailable = balances.fold<double>(
-          0,
-          (sum, b) => sum + b.availableBalance,
-        );
+        // Force Leave (Mandatory) isn't separate spendable leave -- using it
+        // just deducts from Vacation Leave (see 017's
+        // deduct_vacation_leave_for_force_leave trigger), so its own
+        // remaining balance still shows as its own card, but folding it
+        // into the overall total would double-count those days on top of
+        // Vacation Leave's balance.
+        final overallAvailable = balances
+            .where((b) => b.leaveTypeName != 'Force Leave (Mandatory)')
+            .fold<double>(0, (sum, b) => sum + b.availableBalance);
 
         return RefreshIndicator(
           onRefresh: _reload,

@@ -47,6 +47,10 @@ class ProfileService {
     String? gsisNo,
     String? tinNo,
     DateTime? dateHired,
+    String? divisionSection,
+    String? immediateSupervisor,
+    String? philhealthNo,
+    String? pagibigNo,
   }) async {
     await Supabase.instance.client
         .from('els_employees')
@@ -61,6 +65,10 @@ class ProfileService {
               : '${dateHired.year.toString().padLeft(4, '0')}-'
                     '${dateHired.month.toString().padLeft(2, '0')}-'
                     '${dateHired.day.toString().padLeft(2, '0')}',
+          'division_section': divisionSection,
+          'immediate_supervisor': immediateSupervisor,
+          'philhealth_no': philhealthNo,
+          'pagibig_no': pagibigNo,
         })
         .eq('id', employeeId);
   }

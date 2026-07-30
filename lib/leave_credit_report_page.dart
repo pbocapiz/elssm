@@ -231,7 +231,7 @@ class _ReportRowTile extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                row.availableBalance.toStringAsFixed(2),
+                row.availableBalance.toStringAsFixed(3),
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   color: navyBlue,

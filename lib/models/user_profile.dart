@@ -20,6 +20,10 @@ class UserProfile {
     this.gsisNo,
     this.tinNo,
     this.dateHired,
+    this.divisionSection,
+    this.immediateSupervisor,
+    this.philhealthNo,
+    this.pagibigNo,
   });
 
   factory UserProfile.fromMap(Map<String, dynamic> map) {
@@ -40,6 +44,10 @@ class UserProfile {
       gsisNo: map['gsis_no'] as String?,
       tinNo: map['tin_no'] as String?,
       dateHired: dateHired == null ? null : DateTime.tryParse(dateHired),
+      divisionSection: map['division_section'] as String?,
+      immediateSupervisor: map['immediate_supervisor'] as String?,
+      philhealthNo: map['philhealth_no'] as String?,
+      pagibigNo: map['pagibig_no'] as String?,
     );
   }
 
@@ -62,6 +70,10 @@ class UserProfile {
   final String? gsisNo;
   final String? tinNo;
   final DateTime? dateHired;
+  final String? divisionSection;
+  final String? immediateSupervisor;
+  final String? philhealthNo;
+  final String? pagibigNo;
 
   bool get isLinkedToEmployeeRecord => employeeId != null;
 

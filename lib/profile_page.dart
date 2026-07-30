@@ -56,7 +56,10 @@ class _ProfilePageState extends State<ProfilePage> {
                     style: TextStyle(color: Colors.grey.shade600),
                   ),
                   const SizedBox(height: 16),
-                  OutlinedButton(onPressed: _reload, child: const Text('Retry')),
+                  OutlinedButton(
+                    onPressed: _reload,
+                    child: const Text('Retry'),
+                  ),
                 ],
               ),
             ),
@@ -337,6 +340,10 @@ class _EmploymentEditCardState extends State<_EmploymentEditCard> {
   late final TextEditingController _civilStatusController;
   late final TextEditingController _gsisNoController;
   late final TextEditingController _tinNoController;
+  late final TextEditingController _divisionSectionController;
+  late final TextEditingController _immediateSupervisorController;
+  late final TextEditingController _philhealthNoController;
+  late final TextEditingController _pagibigNoController;
   DateTime? _dateHired;
   bool _isSaving = false;
 
@@ -355,6 +362,16 @@ class _EmploymentEditCardState extends State<_EmploymentEditCard> {
     );
     _gsisNoController = TextEditingController(text: profile.gsisNo ?? '');
     _tinNoController = TextEditingController(text: profile.tinNo ?? '');
+    _divisionSectionController = TextEditingController(
+      text: profile.divisionSection ?? '',
+    );
+    _immediateSupervisorController = TextEditingController(
+      text: profile.immediateSupervisor ?? '',
+    );
+    _philhealthNoController = TextEditingController(
+      text: profile.philhealthNo ?? '',
+    );
+    _pagibigNoController = TextEditingController(text: profile.pagibigNo ?? '');
     _dateHired = profile.dateHired;
   }
 
@@ -365,6 +382,10 @@ class _EmploymentEditCardState extends State<_EmploymentEditCard> {
     _civilStatusController.dispose();
     _gsisNoController.dispose();
     _tinNoController.dispose();
+    _divisionSectionController.dispose();
+    _immediateSupervisorController.dispose();
+    _philhealthNoController.dispose();
+    _pagibigNoController.dispose();
     super.dispose();
   }
 
@@ -397,6 +418,10 @@ class _EmploymentEditCardState extends State<_EmploymentEditCard> {
         gsisNo: _blankToNull(_gsisNoController.text),
         tinNo: _blankToNull(_tinNoController.text),
         dateHired: _dateHired,
+        divisionSection: _blankToNull(_divisionSectionController.text),
+        immediateSupervisor: _blankToNull(_immediateSupervisorController.text),
+        philhealthNo: _blankToNull(_philhealthNoController.text),
+        pagibigNo: _blankToNull(_pagibigNoController.text),
       );
       await widget.onSaved();
       if (!mounted) return;
@@ -457,6 +482,22 @@ class _EmploymentEditCardState extends State<_EmploymentEditCard> {
           ),
           const SizedBox(height: 12),
           TextField(
+            controller: _divisionSectionController,
+            decoration: const InputDecoration(
+              labelText: 'Division/Section',
+              isDense: true,
+            ),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _immediateSupervisorController,
+            decoration: const InputDecoration(
+              labelText: 'Immediate Supervisor',
+              isDense: true,
+            ),
+          ),
+          const SizedBox(height: 12),
+          TextField(
             controller: _civilStatusController,
             decoration: const InputDecoration(
               labelText: 'Civil Status',
@@ -480,11 +521,27 @@ class _EmploymentEditCardState extends State<_EmploymentEditCard> {
             ),
           ),
           const SizedBox(height: 12),
+          TextField(
+            controller: _philhealthNoController,
+            decoration: const InputDecoration(
+              labelText: 'Philhealth No.',
+              isDense: true,
+            ),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _pagibigNoController,
+            decoration: const InputDecoration(
+              labelText: 'Pag-IBIG No.',
+              isDense: true,
+            ),
+          ),
+          const SizedBox(height: 12),
           InkWell(
             onTap: _isSaving ? null : _pickDateHired,
             child: InputDecorator(
               decoration: const InputDecoration(
-                labelText: 'Date Hired',
+                labelText: 'Date Hired / Original Appointment Date',
                 isDense: true,
               ),
               child: Text(
@@ -493,6 +550,10 @@ class _EmploymentEditCardState extends State<_EmploymentEditCard> {
               ),
             ),
           ),
+          if (_dateHired != null) ...[
+            const SizedBox(height: 8),
+            _LengthOfServiceLabel(dateHired: _dateHired!),
+          ],
           const SizedBox(height: 16),
           Align(
             alignment: Alignment.centerRight,
@@ -514,5 +575,44 @@ class _EmploymentEditCardState extends State<_EmploymentEditCard> {
         ],
       ),
     );
+  }
+}
+
+class _LengthOfServiceLabel extends StatelessWidget {
+  const _LengthOfServiceLabel({required this.dateHired});
+
+  final DateTime dateHired;
+
+  @override
+  Widget build(BuildContext context) {
+    final (years, months, days) = _yearsMonthsDays(dateHired, DateTime.now());
+    return Padding(
+      padding: const EdgeInsets.only(left: 4),
+      child: Text(
+        'Length of Service: $years year(s), $months month(s), $days day(s)',
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: Colors.grey.shade600,
+        ),
+      ),
+    );
+  }
+
+  (int, int, int) _yearsMonthsDays(DateTime from, DateTime to) {
+    var years = to.year - from.year;
+    var months = to.month - from.month;
+    var days = to.day - from.day;
+
+    if (days < 0) {
+      months -= 1;
+      final daysInPreviousMonth = DateTime(to.year, to.month, 0).day;
+      days += daysInPreviousMonth;
+    }
+    if (months < 0) {
+      years -= 1;
+      months += 12;
+    }
+    return (years, months, days);
   }
 }

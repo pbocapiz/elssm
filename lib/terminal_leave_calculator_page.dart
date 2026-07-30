@@ -62,7 +62,7 @@ class _TerminalLeaveCalculatorPageState
 
   String _formatDays(double value) => value == value.roundToDouble()
       ? value.toStringAsFixed(0)
-      : value.toStringAsFixed(2);
+      : value.toStringAsFixed(3);
 
   void _compute() {
     final salary = double.tryParse(_salaryController.text.trim());
@@ -316,7 +316,7 @@ class _DaysField extends StatelessWidget {
       controller: controller,
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
       inputFormatters: [
-        FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')),
+        FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,3}')),
       ],
       decoration: InputDecoration(
         suffixIcon: Padding(
@@ -417,7 +417,7 @@ class _ResultCard extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           Text(
-            'Total leave credits: ${credits.toStringAsFixed(2)} day(s)',
+            'Total leave credits: ${credits.toStringAsFixed(3)} day(s)',
             style: TextStyle(fontSize: 12.5, color: Colors.grey.shade600),
           ),
           Text(
