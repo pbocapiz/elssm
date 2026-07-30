@@ -168,7 +168,7 @@ class _OverallBalanceCard extends StatelessWidget {
             ),
           ),
           Text(
-            total.toStringAsFixed(2),
+            total.toStringAsFixed(3),
             style: const TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.bold,
@@ -225,7 +225,7 @@ class _LeaveBalanceCard extends StatelessWidget {
                 ),
               ),
               Text(
-                balance.availableBalance.toStringAsFixed(2),
+                balance.availableBalance.toStringAsFixed(3),
                 style: const TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
@@ -321,7 +321,7 @@ class _BalanceStatBox extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            value.toStringAsFixed(2),
+            value.toStringAsFixed(3),
             style: const TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w700,
