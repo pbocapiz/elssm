@@ -70,7 +70,17 @@ class AuthHeader extends StatelessWidget {
         ),
         const SizedBox(height: 20),
         const Text(
-          'EMPLOYEE SELF-SERVICE LEAVE MONITORING SYSTEM',
+          'LEAP',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 26,
+            fontWeight: FontWeight.bold,
+            color: navyBlue,
+          ),
+        ),
+        const SizedBox(height: 4),
+        const Text(
+          'LEAVE ENQUIRY AND ACCESS PORTAL',
           textAlign: TextAlign.center,
           style: TextStyle(
             fontSize: 17,
@@ -79,7 +89,17 @@ class AuthHeader extends StatelessWidget {
             color: navyBlue,
           ),
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: 2),
+        const Text(
+          'Your Leave, Your Access, Anytime, Anywhere',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 11,
+            fontStyle: FontStyle.italic,
+            color: Colors.grey,
+          ),
+        ),
+        const SizedBox(height: 10),
         Text(
           subtitle,
           style: TextStyle(

@@ -106,10 +106,10 @@ class _LeaveBalancePageState extends State<LeaveBalancePage> {
           );
         }
 
-        // Overall Available Balance only ever reflects Vacation Leave and
+        // Total Leave Credits Earned only ever reflects Vacation Leave and
         // Sick Leave -- every other type (Special Privilege Leave, Wellness
-        // Leave, Force Leave, etc.) still gets its own card below, it just
-        // doesn't fold into this combined total.
+        // Leave, etc.) still gets its own card below, it just doesn't fold
+        // into this combined total.
         final overallAvailable = balances
             .where((b) => _pinnedLeaveTypes.contains(b.leaveTypeName))
             .fold<double>(0, (sum, b) => sum + b.availableBalance);
@@ -137,6 +137,31 @@ class _OverallBalanceCard extends StatelessWidget {
 
   final double total;
 
+  static const _monthNames = [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+  ];
+
+  /// Day 0 of the current month is the last day of the previous one --
+  /// matches what the balance actually reflects, since 014's usage-delay
+  /// rule excludes the current month's not-yet-usable credit.
+  String get _asOfLabel {
+    final now = DateTime.now();
+    final lastDayOfPreviousMonth = DateTime(now.year, now.month, 0);
+    final month = _monthNames[lastDayOfPreviousMonth.month - 1];
+    return 'as of $month ${lastDayOfPreviousMonth.day}, ${lastDayOfPreviousMonth.year}';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -154,17 +179,30 @@ class _OverallBalanceCard extends StatelessWidget {
         ],
       ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.baseline,
-        textBaseline: TextBaseline.alphabetic,
+        crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          const Expanded(
-            child: Text(
-              'Overall Available Balance',
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w700,
-                color: Colors.white,
-              ),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Total Leave Credits Earned',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '($_asOfLabel)',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Colors.white.withValues(alpha: 0.7),
+                  ),
+                ),
+              ],
             ),
           ),
           Text(
@@ -176,9 +214,15 @@ class _OverallBalanceCard extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 4),
-          Text(
-            'days',
-            style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.8)),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 3),
+            child: Text(
+              'days',
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.white.withValues(alpha: 0.8),
+              ),
+            ),
           ),
         ],
       ),

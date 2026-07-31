@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 
 import 'apply_leave_dialog.dart';
+import 'models/leave_balance.dart';
 import 'models/leave_transaction.dart';
 import 'models/leave_type.dart';
+import 'services/leave_service.dart';
 import 'services/opening_balance_service.dart';
 import 'services/transaction_service.dart';
 import 'theme.dart';
@@ -18,12 +20,14 @@ class _LeaveHistoryPageState extends State<LeaveHistoryPage> {
   late Future<List<LeaveType>> _leaveTypesFuture;
   LeaveType? _selectedLeaveType;
   late Future<List<LeaveTransaction>> _transactionsFuture;
+  late Future<List<LeaveBalance>> _balancesFuture;
 
   @override
   void initState() {
     super.initState();
     _leaveTypesFuture = OpeningBalanceService.fetchLeaveTypes();
     _transactionsFuture = TransactionService.fetchCurrentEmployeeTransactions();
+    _balancesFuture = LeaveService.fetchCurrentEmployeeBalances();
   }
 
   void _reload() {
@@ -58,6 +62,17 @@ class _LeaveHistoryPageState extends State<LeaveHistoryPage> {
       ),
       body: Column(
         children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+            child: FutureBuilder<List<LeaveBalance>>(
+              future: _balancesFuture,
+              builder: (context, snapshot) {
+                final balances = snapshot.data ?? const [];
+                if (balances.isEmpty) return const SizedBox.shrink();
+                return _RecentActivityTable(balances: balances);
+              },
+            ),
+          ),
           Padding(
             padding: const EdgeInsets.all(16),
             child: FutureBuilder<List<LeaveType>>(
@@ -129,6 +144,95 @@ class _LeaveHistoryPageState extends State<LeaveHistoryPage> {
   }
 }
 
+class _RecentActivityTable extends StatelessWidget {
+  const _RecentActivityTable({required this.balances});
+
+  final List<LeaveBalance> balances;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: navyBlue.withValues(alpha: 0.18),
+            blurRadius: 24,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          LayoutBuilder(
+            builder: (context, constraints) {
+              return SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minWidth: constraints.maxWidth),
+                  child: DataTable(
+                    headingRowHeight: 36,
+                    dataRowMinHeight: 36,
+                    dataRowMaxHeight: 40,
+                    columnSpacing: 20,
+                    headingTextStyle: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.4,
+                      color: Colors.grey.shade500,
+                    ),
+                    dataTextStyle: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: navyBlue,
+                    ),
+                    columns: const [
+                      DataColumn(label: Text('LEAVE')),
+                      DataColumn(label: Text('OPENING'), numeric: true),
+                      DataColumn(label: Text('EARNED'), numeric: true),
+                      DataColumn(label: Text('DEDUCTED'), numeric: true),
+                      DataColumn(label: Text('APPLIED'), numeric: true),
+                      DataColumn(label: Text('TOTAL'), numeric: true),
+                    ],
+                    rows: [
+                      for (final balance in balances)
+                        DataRow(
+                          cells: [
+                            DataCell(Text(balance.leaveTypeName)),
+                            DataCell(
+                              Text(balance.openingBalance.toStringAsFixed(3)),
+                            ),
+                            DataCell(
+                              Text(balance.totalEarned.toStringAsFixed(3)),
+                            ),
+                            DataCell(
+                              Text(balance.totalDeducted.toStringAsFixed(3)),
+                            ),
+                            DataCell(
+                              Text(balance.totalApplied.toStringAsFixed(3)),
+                            ),
+                            DataCell(
+                              Text(balance.availableBalance.toStringAsFixed(3)),
+                            ),
+                          ],
+                        ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class TransactionTile extends StatelessWidget {
   const TransactionTile({
     super.key,
@@ -136,6 +240,8 @@ class TransactionTile extends StatelessWidget {
     this.showEmployeeName = false,
     this.onApprove,
     this.onReject,
+    this.onEdit,
+    this.onDelete,
   });
 
   final LeaveTransaction transaction;
@@ -145,6 +251,12 @@ class TransactionTile extends StatelessWidget {
   /// Approve/Reject row is shown below the tile's content.
   final VoidCallback? onApprove;
   final VoidCallback? onReject;
+
+  /// When set, an Edit/Delete row is shown below the tile's content --
+  /// used on the Admin/Approver Leave Records screen to manage any
+  /// transaction type directly from its card.
+  final VoidCallback? onEdit;
+  final VoidCallback? onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -310,6 +422,32 @@ class TransactionTile extends StatelessWidget {
                     ),
                     icon: const Icon(Icons.check, size: 16),
                     label: const Text('Approve'),
+                  ),
+              ],
+            ),
+          ],
+          if (onEdit != null || onDelete != null) ...[
+            const SizedBox(height: 10),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                if (onDelete != null)
+                  TextButton.icon(
+                    onPressed: onDelete,
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.redAccent,
+                    ),
+                    icon: const Icon(Icons.delete_outline_rounded, size: 16),
+                    label: const Text('Remove'),
+                  ),
+                if (onDelete != null && onEdit != null)
+                  const SizedBox(width: 4),
+                if (onEdit != null)
+                  TextButton.icon(
+                    onPressed: onEdit,
+                    style: TextButton.styleFrom(foregroundColor: navyBlue),
+                    icon: const Icon(Icons.edit_outlined, size: 16),
+                    label: const Text('Edit'),
                   ),
               ],
             ),

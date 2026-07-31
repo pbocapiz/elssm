@@ -17,7 +17,7 @@ import 'terminal_leave_calculator_page.dart';
 import 'theme.dart';
 import 'widgets/app_sidebar.dart';
 
-const _sidebarWidth = 260.0;
+const _sidebarWidth = 271.0;
 
 /// Keyed per user (not just a flat key) so a shared browser doesn't hand
 /// one signed-in user's last-viewed page to whoever logs in next -- e.g.
@@ -188,7 +188,10 @@ class _ContentArea extends StatelessWidget {
     }
 
     if (selected == SidebarItem.members) {
-      return Container(color: colorScheme.surface, child: const MembersPage());
+      return Container(
+        color: colorScheme.surface,
+        child: MembersPage(accessLevel: accessLevel),
+      );
     }
 
     if (selected == SidebarItem.profile) {

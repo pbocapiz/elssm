@@ -19,6 +19,7 @@ class LeaveService {
         .from('v_leave_balances')
         .select()
         .eq('employee_id', employeeId)
+        .neq('leave_type_name', 'Force Leave')
         .order('leave_type_id');
 
     return rows.map(LeaveBalance.fromMap).toList();

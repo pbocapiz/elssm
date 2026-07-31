@@ -529,6 +529,32 @@ class _PayrollCard extends StatelessWidget {
   }
 }
 
+class _QuincenaColumnLabel extends StatelessWidget {
+  const _QuincenaColumnLabel(this.label);
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Text(label),
+        const SizedBox(height: 2),
+        Text(
+          'Quincena',
+          style: TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.w400,
+            color: Colors.white.withValues(alpha: 0.7),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class _PayrollTable extends StatelessWidget {
   const _PayrollTable({
     required this.entries,
@@ -580,13 +606,19 @@ class _PayrollTable extends StatelessWidget {
       dividerThickness: 0,
       columnSpacing: 12,
       horizontalMargin: 12,
-      headingRowHeight: 44,
+      headingRowHeight: 88,
       dataRowMinHeight: 52,
       dataRowMaxHeight: 52,
       columns: [
         const DataColumn(label: Text('Month')),
-        const DataColumn(label: Text('1st'), numeric: true),
-        const DataColumn(label: Text('2nd'), numeric: true),
+        const DataColumn(
+          label: _QuincenaColumnLabel('1st'),
+          numeric: true,
+        ),
+        const DataColumn(
+          label: _QuincenaColumnLabel('2nd'),
+          numeric: true,
+        ),
         const DataColumn(label: Text('Total'), numeric: true),
         if (canEdit) const DataColumn(label: Text('')),
       ],

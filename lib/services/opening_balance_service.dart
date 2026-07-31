@@ -11,6 +11,7 @@ class OpeningBalanceService {
         .from('els_leave_types')
         .select('id, leave_name')
         .eq('is_active', true)
+        .neq('leave_name', 'Force Leave')
         .order('leave_name');
     return rows.map(LeaveType.fromMap).toList();
   }
@@ -45,5 +46,25 @@ class OpeningBalanceService {
       'balance_year': year,
       'opening_balance': amount,
     }, onConflict: 'employee_id,leave_type_id,balance_year');
+  }
+
+  /// Edits an existing opening-balance row directly, from the Leave Records
+  /// card -- distinct from [setOpeningBalance], which upserts by
+  /// employee/type/year from the Starting Credits page.
+  static Future<void> updateOpeningBalanceById({
+    required int id,
+    required double amount,
+  }) async {
+    await Supabase.instance.client
+        .from('els_leave_opening_balance')
+        .update({'opening_balance': amount})
+        .eq('id', id);
+  }
+
+  static Future<void> deleteOpeningBalance(int id) async {
+    await Supabase.instance.client
+        .from('els_leave_opening_balance')
+        .delete()
+        .eq('id', id);
   }
 }

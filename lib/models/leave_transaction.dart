@@ -44,7 +44,9 @@ class LeaveTransaction {
   final String? status;
   final String? remarks;
 
-  /// els_leave_applications.id when [type] is application, else null.
-  /// Needed to target the approve/reject update.
+  /// The row id in this transaction's own source table (els_leave_credits,
+  /// els_leave_deductions, els_leave_opening_balance, or
+  /// els_leave_applications depending on [type]). Needed to target
+  /// approve/reject, edit, and delete actions at the right row.
   final int? sourceId;
 }

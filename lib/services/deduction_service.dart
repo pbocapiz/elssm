@@ -40,6 +40,29 @@ class DeductionService {
     });
   }
 
+  static Future<void> updateDeduction({
+    required int id,
+    required double amount,
+    String? remarks,
+  }) async {
+    await Supabase.instance.client
+        .from('els_leave_deductions')
+        .update({
+          'amount': amount,
+          'remarks': (remarks != null && remarks.trim().isNotEmpty)
+              ? remarks.trim()
+              : null,
+        })
+        .eq('id', id);
+  }
+
+  static Future<void> deleteDeduction(int id) async {
+    await Supabase.instance.client
+        .from('els_leave_deductions')
+        .delete()
+        .eq('id', id);
+  }
+
   static String _dateOnly(DateTime date) =>
       date.toIso8601String().split('T').first;
 }

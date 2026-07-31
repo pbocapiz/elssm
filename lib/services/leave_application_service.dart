@@ -41,6 +41,33 @@ class LeaveApplicationService {
         .eq('id', applicationId);
   }
 
+  /// Edits an existing application's day count/remarks from the Leave
+  /// Records card. RLS is the same "Approvers can update office
+  /// applications" / "Admins can manage applications" policies that already
+  /// cover [updateStatus].
+  static Future<void> updateApplication({
+    required int id,
+    required int days,
+    String? remarks,
+  }) async {
+    await Supabase.instance.client
+        .from('els_leave_applications')
+        .update({
+          'days': days,
+          'remarks': (remarks != null && remarks.trim().isNotEmpty)
+              ? remarks.trim()
+              : null,
+        })
+        .eq('id', id);
+  }
+
+  static Future<void> deleteApplication(int id) async {
+    await Supabase.instance.client
+        .from('els_leave_applications')
+        .delete()
+        .eq('id', id);
+  }
+
   static String _dateOnly(DateTime date) =>
       date.toIso8601String().split('T').first;
 }

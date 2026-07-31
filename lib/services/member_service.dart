@@ -28,4 +28,24 @@ class MemberService {
         .update({'is_active': isActive})
         .eq('id', userId);
   }
+
+  /// Edits Position/Access Level/Status together, from the Members screen's
+  /// edit card. RLS scopes what a caller can actually change: Admins can
+  /// edit anyone, Approvers only accesslevel-3 employees in their own
+  /// office and only up to accesslevel 2 (see 023_approver_admin_edit_members.sql).
+  static Future<void> updateMember({
+    required String userId,
+    required String position,
+    required int accessLevel,
+    required bool isActive,
+  }) async {
+    await Supabase.instance.client
+        .from('users')
+        .update({
+          'position': position,
+          'accesslevel': accessLevel,
+          'is_active': isActive,
+        })
+        .eq('id', userId);
+  }
 }

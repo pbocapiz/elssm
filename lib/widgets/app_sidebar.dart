@@ -30,13 +30,13 @@ extension SidebarItemDetails on SidebarItem {
   String get label => switch (this) {
     SidebarItem.dashboard => 'Dashboard',
     SidebarItem.leaveBalance => 'Leave Balance',
-    SidebarItem.payroll => 'Payroll',
+    SidebarItem.payroll => 'Salary Claims',
     SidebarItem.profile => 'Profile',
     SidebarItem.manageStartingCredits => 'Starting Credits',
     SidebarItem.leaveRecords => 'Leave Records',
     SidebarItem.leaveCreditReport => 'Credit Report',
     SidebarItem.members => 'Members',
-    SidebarItem.terminalLeaveCalculator => 'Leave Calculator',
+    SidebarItem.terminalLeaveCalculator => 'Terminal Leave Calculator',
   };
 
   IconData get icon => switch (this) {
@@ -117,7 +117,7 @@ class AppSidebar extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         const Text(
-                          'ELSSM',
+                          'LEAP',
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
@@ -126,12 +126,22 @@ class AppSidebar extends StatelessWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'Employee Self-Service Leave Monitoring System',
+                          'Leave Enquiry and Access Portal',
                           style: TextStyle(
                             fontSize: 10,
                             fontWeight: FontWeight.w500,
                             height: 1.3,
                             color: Colors.white.withValues(alpha: 0.7),
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'Your Leave, Your Access, Anytime, Anywhere',
+                          style: TextStyle(
+                            fontSize: 9,
+                            fontStyle: FontStyle.italic,
+                            height: 1.3,
+                            color: Colors.white.withValues(alpha: 0.55),
                           ),
                         ),
                       ],

@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'add_deduction_dialog.dart';
 import 'leave_history_page.dart';
 import 'models/leave_transaction.dart';
 import 'models/leave_type.dart';
+import 'services/credit_service.dart';
+import 'services/deduction_service.dart';
 import 'services/leave_application_service.dart';
 import 'services/opening_balance_service.dart';
 import 'services/transaction_service.dart';
@@ -91,6 +94,66 @@ class _LeaveRecordsPageState extends State<LeaveRecordsPage> {
     if (added == true) _reload();
   }
 
+  Future<void> _openEditDialog(LeaveTransaction transaction) async {
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (context) => _EditTransactionDialog(transaction: transaction),
+    );
+    if (saved == true) _reload();
+  }
+
+  Future<void> _handleDelete(LeaveTransaction transaction) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Remove this record?'),
+        content: Text(
+          '${transaction.employeeName} — ${transaction.leaveTypeName}, '
+          '${transaction.amount.abs().toStringAsFixed(2)} day(s). '
+          'This cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: FilledButton.styleFrom(backgroundColor: Colors.redAccent),
+            child: const Text('Remove'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    final sourceId = transaction.sourceId;
+    if (sourceId == null) return;
+
+    try {
+      switch (transaction.type) {
+        case LeaveTransactionType.openingBalance:
+          await OpeningBalanceService.deleteOpeningBalance(sourceId);
+        case LeaveTransactionType.credit:
+          await CreditService.deleteCredit(sourceId);
+        case LeaveTransactionType.deduction:
+          await DeductionService.deleteDeduction(sourceId);
+        case LeaveTransactionType.application:
+          await LeaveApplicationService.deleteApplication(sourceId);
+      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Record removed')));
+      _reload();
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to remove: $error')));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -170,6 +233,12 @@ class _LeaveRecordsPageState extends State<LeaveRecordsPage> {
                       showEmployeeName: true,
                       onApprove: () => _handleReview(transaction, 'APPROVED'),
                       onReject: () => _handleReview(transaction, 'REJECTED'),
+                      onEdit: transaction.sourceId == null
+                          ? null
+                          : () => _openEditDialog(transaction),
+                      onDelete: transaction.sourceId == null
+                          ? null
+                          : () => _handleDelete(transaction),
                     );
                   },
                 );
@@ -177,6 +246,192 @@ class _LeaveRecordsPageState extends State<LeaveRecordsPage> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _EditTransactionDialog extends StatefulWidget {
+  const _EditTransactionDialog({required this.transaction});
+
+  final LeaveTransaction transaction;
+
+  @override
+  State<_EditTransactionDialog> createState() =>
+      _EditTransactionDialogState();
+}
+
+class _EditTransactionDialogState extends State<_EditTransactionDialog> {
+  late final _amountController = TextEditingController(
+    text: widget.transaction.amount.abs().toStringAsFixed(2),
+  );
+  late final _remarksController = TextEditingController(
+    text: widget.transaction.type == LeaveTransactionType.openingBalance
+        ? ''
+        : (widget.transaction.remarks ?? ''),
+  );
+  bool _isSubmitting = false;
+
+  @override
+  void dispose() {
+    _amountController.dispose();
+    _remarksController.dispose();
+    super.dispose();
+  }
+
+  String get _title => switch (widget.transaction.type) {
+    LeaveTransactionType.openingBalance => 'Edit Opening Balance',
+    LeaveTransactionType.credit => 'Edit Credit',
+    LeaveTransactionType.deduction => 'Edit Deduction',
+    LeaveTransactionType.application => 'Edit Application',
+  };
+
+  String get _amountLabel => switch (widget.transaction.type) {
+    LeaveTransactionType.openingBalance => 'Opening Balance (days)',
+    LeaveTransactionType.credit => 'Earned (days)',
+    LeaveTransactionType.deduction => 'Days to Deduct',
+    LeaveTransactionType.application => 'Days',
+  };
+
+  bool get _showRemarks =>
+      widget.transaction.type != LeaveTransactionType.openingBalance;
+
+  Future<void> _handleSubmit() async {
+    final amount = double.tryParse(_amountController.text.trim());
+    if (amount == null || amount <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Enter a valid number of days')),
+      );
+      return;
+    }
+
+    final sourceId = widget.transaction.sourceId;
+    if (sourceId == null) return;
+
+    setState(() => _isSubmitting = true);
+    try {
+      final remarks = _remarksController.text;
+      switch (widget.transaction.type) {
+        case LeaveTransactionType.openingBalance:
+          await OpeningBalanceService.updateOpeningBalanceById(
+            id: sourceId,
+            amount: amount,
+          );
+        case LeaveTransactionType.credit:
+          await CreditService.updateCredit(
+            id: sourceId,
+            earned: amount,
+            remarks: remarks,
+          );
+        case LeaveTransactionType.deduction:
+          await DeductionService.updateDeduction(
+            id: sourceId,
+            amount: amount,
+            remarks: remarks,
+          );
+        case LeaveTransactionType.application:
+          await LeaveApplicationService.updateApplication(
+            id: sourceId,
+            days: amount.round(),
+            remarks: remarks,
+          );
+      }
+      if (!mounted) return;
+      Navigator.of(context).pop(true);
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to save: $error')));
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+      insetPadding: const EdgeInsets.all(24),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 420),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      _title,
+                      style: const TextStyle(
+                        fontSize: 19,
+                        fontWeight: FontWeight.w700,
+                        color: navyBlue,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: _isSubmitting
+                        ? null
+                        : () => Navigator.of(context).pop(false),
+                    icon: const Icon(Icons.close_rounded),
+                    color: Colors.grey.shade500,
+                    splashRadius: 20,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '${widget.transaction.employeeName} — '
+                '${widget.transaction.leaveTypeName}',
+                style: TextStyle(fontSize: 12.5, color: Colors.grey.shade600),
+              ),
+              const SizedBox(height: 20),
+              TextField(
+                controller: _amountController,
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')),
+                ],
+                decoration: InputDecoration(labelText: _amountLabel),
+              ),
+              if (_showRemarks) ...[
+                const SizedBox(height: 14),
+                TextField(
+                  controller: _remarksController,
+                  decoration: const InputDecoration(
+                    labelText: 'Remarks (optional)',
+                    alignLabelWithHint: true,
+                  ),
+                  maxLines: 3,
+                ),
+              ],
+              const SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: _isSubmitting
+                        ? null
+                        : () => Navigator.of(context).pop(false),
+                    child: const Text('Cancel'),
+                  ),
+                  const SizedBox(width: 8),
+                  FilledButton(
+                    onPressed: _isSubmitting ? null : _handleSubmit,
+                    style: FilledButton.styleFrom(backgroundColor: navyBlue),
+                    child: Text(_isSubmitting ? 'Saving…' : 'Save'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
