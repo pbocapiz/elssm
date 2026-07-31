@@ -22,19 +22,23 @@ class LeaveRecordsPage extends StatefulWidget {
 class _LeaveRecordsPageState extends State<LeaveRecordsPage> {
   late Future<List<LeaveType>> _leaveTypesFuture;
   LeaveType? _selectedLeaveType;
+  int _selectedYear = DateTime.now().year;
   late Future<List<LeaveTransaction>> _transactionsFuture;
 
   @override
   void initState() {
     super.initState();
     _leaveTypesFuture = OpeningBalanceService.fetchLeaveTypes();
-    _transactionsFuture = TransactionService.fetchOfficeTransactions();
+    _transactionsFuture = TransactionService.fetchOfficeTransactions(
+      year: _selectedYear,
+    );
   }
 
   void _reload() {
     setState(() {
       _transactionsFuture = TransactionService.fetchOfficeTransactions(
         leaveTypeId: _selectedLeaveType?.id,
+        year: _selectedYear,
       );
     });
   }
@@ -169,30 +173,61 @@ class _LeaveRecordsPageState extends State<LeaveRecordsPage> {
         children: [
           Padding(
             padding: const EdgeInsets.all(16),
-            child: FutureBuilder<List<LeaveType>>(
-              future: _leaveTypesFuture,
-              builder: (context, snapshot) {
-                final types = snapshot.data ?? const [];
-                return DropdownButtonFormField<LeaveType?>(
-                  initialValue: _selectedLeaveType,
-                  isExpanded: true,
-                  decoration: const InputDecoration(
-                    labelText: 'Filter by Leave Type',
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  flex: 2,
+                  child: FutureBuilder<List<LeaveType>>(
+                    future: _leaveTypesFuture,
+                    builder: (context, snapshot) {
+                      final types = snapshot.data ?? const [];
+                      return DropdownButtonFormField<LeaveType?>(
+                        initialValue: _selectedLeaveType,
+                        isExpanded: true,
+                        decoration: const InputDecoration(
+                          labelText: 'Filter by Leave Type',
+                        ),
+                        items: [
+                          const DropdownMenuItem(
+                            value: null,
+                            child: Text('All Leave Types'),
+                          ),
+                          for (final type in types)
+                            DropdownMenuItem(
+                              value: type,
+                              child: Text(type.name),
+                            ),
+                        ],
+                        onChanged: (type) {
+                          setState(() => _selectedLeaveType = type);
+                          _reload();
+                        },
+                      );
+                    },
                   ),
-                  items: [
-                    const DropdownMenuItem(
-                      value: null,
-                      child: Text('All Leave Types'),
-                    ),
-                    for (final type in types)
-                      DropdownMenuItem(value: type, child: Text(type.name)),
-                  ],
-                  onChanged: (type) {
-                    setState(() => _selectedLeaveType = type);
-                    _reload();
-                  },
-                );
-              },
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: DropdownButtonFormField<int>(
+                    initialValue: _selectedYear,
+                    decoration: const InputDecoration(labelText: 'Year'),
+                    items: [
+                      for (
+                        var y = DateTime.now().year - 2;
+                        y <= DateTime.now().year + 1;
+                        y++
+                      )
+                        DropdownMenuItem(value: y, child: Text('$y')),
+                    ],
+                    onChanged: (year) {
+                      if (year == null) return;
+                      setState(() => _selectedYear = year);
+                      _reload();
+                    },
+                  ),
+                ),
+              ],
             ),
           ),
           const Divider(height: 1),

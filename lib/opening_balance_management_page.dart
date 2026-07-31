@@ -23,6 +23,7 @@ class _OpeningBalanceManagementPageState
 
   Future<List<OfficeEmployeeBalance>>? _balancesFuture;
   final Map<int, TextEditingController> _controllers = {};
+  final Map<int, DateTime?> _effectiveDates = {};
   final Set<int> _savingEmployeeIds = {};
 
   @override
@@ -63,10 +64,23 @@ class _OpeningBalanceManagementPageState
                   .text = balance.openingBalance.toStringAsFixed(
                 3,
               );
+              _effectiveDates[balance.employeeId] = balance.effectiveDate;
             }
             return balances;
           });
     });
+  }
+
+  Future<void> _pickEffectiveDate(OfficeEmployeeBalance balance) async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate:
+          _effectiveDates[balance.employeeId] ?? DateTime(_selectedYear),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(DateTime.now().year + 5),
+    );
+    if (picked == null) return;
+    setState(() => _effectiveDates[balance.employeeId] = picked);
   }
 
   Future<void> _save(OfficeEmployeeBalance balance) async {
@@ -83,6 +97,16 @@ class _OpeningBalanceManagementPageState
       return;
     }
 
+    final effectiveDate = _effectiveDates[balance.employeeId];
+    if (effectiveDate == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Choose the date these credits cover'),
+        ),
+      );
+      return;
+    }
+
     setState(() => _savingEmployeeIds.add(balance.employeeId));
     try {
       await OpeningBalanceService.setOpeningBalance(
@@ -90,6 +114,7 @@ class _OpeningBalanceManagementPageState
         leaveTypeId: leaveType.id,
         year: _selectedYear,
         amount: value,
+        effectiveDate: effectiveDate,
       );
       if (!mounted) return;
       ScaffoldMessenger.of(
@@ -106,6 +131,24 @@ class _OpeningBalanceManagementPageState
       }
     }
   }
+
+  static const _monthNames = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ];
+
+  String _formatDate(DateTime date) =>
+      '${_monthNames[date.month - 1]} ${date.day}, ${date.year}';
 
   Future<void> _openAddEmployeeDialog() async {
     final added = await showDialog<bool>(
@@ -222,64 +265,108 @@ class _OpeningBalanceManagementPageState
                           final isSaving = _savingEmployeeIds.contains(
                             balance.employeeId,
                           );
+                          final effectiveDate =
+                              _effectiveDates[balance.employeeId];
 
                           return Padding(
                             padding: const EdgeInsets.symmetric(vertical: 10),
-                            child: Row(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        balance.fullName,
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.w600,
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            balance.fullName,
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                          if (balance.employeeNo != null)
+                                            Text(
+                                              balance.employeeNo!,
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: Colors.grey.shade600,
+                                              ),
+                                            ),
+                                        ],
+                                      ),
+                                    ),
+                                    SizedBox(
+                                      width: 100,
+                                      child: TextField(
+                                        controller:
+                                            _controllers[balance.employeeId],
+                                        keyboardType:
+                                            const TextInputType.numberWithOptions(
+                                              decimal: true,
+                                            ),
+                                        textAlign: TextAlign.right,
+                                        decoration: const InputDecoration(
+                                          isDense: true,
                                         ),
                                       ),
-                                      if (balance.employeeNo != null)
-                                        Text(
-                                          balance.employeeNo!,
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: Colors.grey.shade600,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    isSaving
+                                        ? const SizedBox(
+                                            width: 20,
+                                            height: 20,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                            ),
+                                          )
+                                        : IconButton(
+                                            icon: const Icon(
+                                              Icons.save_outlined,
+                                            ),
+                                            color: effectiveDate == null
+                                                ? Colors.grey.shade400
+                                                : navyBlue,
+                                            tooltip: effectiveDate == null
+                                                ? 'Choose the date these credits cover first'
+                                                : 'Save',
+                                            onPressed: effectiveDate == null
+                                                ? null
+                                                : () => _save(balance),
                                           ),
+                                  ],
+                                ),
+                                const SizedBox(height: 4),
+                                InkWell(
+                                  onTap: () => _pickEffectiveDate(balance),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.calendar_today_outlined,
+                                        size: 13,
+                                        color: effectiveDate == null
+                                            ? Colors.orange.shade800
+                                            : Colors.grey.shade600,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        effectiveDate == null
+                                            ? 'Choose the date these credits cover'
+                                            : 'As of ${_formatDate(effectiveDate)}',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: effectiveDate == null
+                                              ? FontWeight.w600
+                                              : FontWeight.normal,
+                                          color: effectiveDate == null
+                                              ? Colors.orange.shade800
+                                              : Colors.grey.shade600,
                                         ),
+                                      ),
                                     ],
                                   ),
                                 ),
-                                SizedBox(
-                                  width: 100,
-                                  child: TextField(
-                                    controller:
-                                        _controllers[balance.employeeId],
-                                    keyboardType:
-                                        const TextInputType.numberWithOptions(
-                                          decimal: true,
-                                        ),
-                                    textAlign: TextAlign.right,
-                                    decoration: const InputDecoration(
-                                      isDense: true,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                isSaving
-                                    ? const SizedBox(
-                                        width: 20,
-                                        height: 20,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                        ),
-                                      )
-                                    : IconButton(
-                                        icon: const Icon(
-                                          Icons.save_outlined,
-                                          color: navyBlue,
-                                        ),
-                                        onPressed: () => _save(balance),
-                                      ),
                               ],
                             ),
                           );

@@ -11,7 +11,7 @@ class OpeningBalanceService {
         .from('els_leave_types')
         .select('id, leave_name')
         .eq('is_active', true)
-        .neq('leave_name', 'Force Leave')
+        .neq('leave_name', 'Force Leave (Mandatory)')
         .order('leave_name');
     return rows.map(LeaveType.fromMap).toList();
   }
@@ -39,12 +39,14 @@ class OpeningBalanceService {
     required int leaveTypeId,
     required int year,
     required double amount,
+    required DateTime effectiveDate,
   }) async {
     await Supabase.instance.client.from('els_leave_opening_balance').upsert({
       'employee_id': employeeId,
       'leave_type_id': leaveTypeId,
       'balance_year': year,
       'opening_balance': amount,
+      'effective_date': _dateOnly(effectiveDate),
     }, onConflict: 'employee_id,leave_type_id,balance_year');
   }
 
@@ -67,4 +69,7 @@ class OpeningBalanceService {
         .delete()
         .eq('id', id);
   }
+
+  static String _dateOnly(DateTime date) =>
+      date.toIso8601String().split('T').first;
 }

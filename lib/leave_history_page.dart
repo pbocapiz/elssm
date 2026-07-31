@@ -19,6 +19,7 @@ class LeaveHistoryPage extends StatefulWidget {
 class _LeaveHistoryPageState extends State<LeaveHistoryPage> {
   late Future<List<LeaveType>> _leaveTypesFuture;
   LeaveType? _selectedLeaveType;
+  int _selectedYear = DateTime.now().year;
   late Future<List<LeaveTransaction>> _transactionsFuture;
   late Future<List<LeaveBalance>> _balancesFuture;
 
@@ -26,14 +27,22 @@ class _LeaveHistoryPageState extends State<LeaveHistoryPage> {
   void initState() {
     super.initState();
     _leaveTypesFuture = OpeningBalanceService.fetchLeaveTypes();
-    _transactionsFuture = TransactionService.fetchCurrentEmployeeTransactions();
-    _balancesFuture = LeaveService.fetchCurrentEmployeeBalances();
+    _transactionsFuture = TransactionService.fetchCurrentEmployeeTransactions(
+      year: _selectedYear,
+    );
+    _balancesFuture = LeaveService.fetchCurrentEmployeeBalances(
+      year: _selectedYear,
+    );
   }
 
   void _reload() {
     setState(() {
       _transactionsFuture = TransactionService.fetchCurrentEmployeeTransactions(
         leaveTypeId: _selectedLeaveType?.id,
+        year: _selectedYear,
+      );
+      _balancesFuture = LeaveService.fetchCurrentEmployeeBalances(
+        year: _selectedYear,
       );
     });
   }
@@ -75,30 +84,61 @@ class _LeaveHistoryPageState extends State<LeaveHistoryPage> {
           ),
           Padding(
             padding: const EdgeInsets.all(16),
-            child: FutureBuilder<List<LeaveType>>(
-              future: _leaveTypesFuture,
-              builder: (context, snapshot) {
-                final types = snapshot.data ?? const [];
-                return DropdownButtonFormField<LeaveType?>(
-                  initialValue: _selectedLeaveType,
-                  isExpanded: true,
-                  decoration: const InputDecoration(
-                    labelText: 'Filter by Leave Type',
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  flex: 2,
+                  child: FutureBuilder<List<LeaveType>>(
+                    future: _leaveTypesFuture,
+                    builder: (context, snapshot) {
+                      final types = snapshot.data ?? const [];
+                      return DropdownButtonFormField<LeaveType?>(
+                        initialValue: _selectedLeaveType,
+                        isExpanded: true,
+                        decoration: const InputDecoration(
+                          labelText: 'Filter by Leave Type',
+                        ),
+                        items: [
+                          const DropdownMenuItem(
+                            value: null,
+                            child: Text('All Leave Types'),
+                          ),
+                          for (final type in types)
+                            DropdownMenuItem(
+                              value: type,
+                              child: Text(type.name),
+                            ),
+                        ],
+                        onChanged: (type) {
+                          setState(() => _selectedLeaveType = type);
+                          _reload();
+                        },
+                      );
+                    },
                   ),
-                  items: [
-                    const DropdownMenuItem(
-                      value: null,
-                      child: Text('All Leave Types'),
-                    ),
-                    for (final type in types)
-                      DropdownMenuItem(value: type, child: Text(type.name)),
-                  ],
-                  onChanged: (type) {
-                    setState(() => _selectedLeaveType = type);
-                    _reload();
-                  },
-                );
-              },
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: DropdownButtonFormField<int>(
+                    initialValue: _selectedYear,
+                    decoration: const InputDecoration(labelText: 'Year'),
+                    items: [
+                      for (
+                        var y = DateTime.now().year - 2;
+                        y <= DateTime.now().year + 1;
+                        y++
+                      )
+                        DropdownMenuItem(value: y, child: Text('$y')),
+                    ],
+                    onChanged: (year) {
+                      if (year == null) return;
+                      setState(() => _selectedYear = year);
+                      _reload();
+                    },
+                  ),
+                ),
+              ],
             ),
           ),
           const Divider(height: 1),
@@ -283,6 +323,15 @@ class TransactionTile extends StatelessWidget {
         transaction.sourceId != null &&
         (onApprove != null || onReject != null);
 
+    // Vacation/Sick Leave opening balances are subject to 014's usage-delay
+    // rule, so the figure shown isn't "as of Jan 1" like other opening
+    // balances -- it's as of the last day of the previous month, same as
+    // the Dashboard's Total Leave Credits Earned card.
+    final showAsOf =
+        isOpeningBalance &&
+        (transaction.leaveTypeName == 'Vacation Leave' ||
+            transaction.leaveTypeName == 'Sick Leave');
+
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(12),
@@ -336,15 +385,18 @@ class TransactionTile extends StatelessWidget {
                         color: showEmployeeName ? Colors.grey.shade600 : null,
                       ),
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      _formatDate(transaction.date),
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey.shade600,
+                    if (!isOpeningBalance) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        _formatDate(transaction.date),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey.shade600,
+                        ),
                       ),
-                    ),
-                    if (transaction.remarks != null &&
+                    ],
+                    if (!showAsOf &&
+                        transaction.remarks != null &&
                         transaction.remarks!.trim().isNotEmpty)
                       Padding(
                         padding: const EdgeInsets.only(top: 2),
@@ -354,6 +406,17 @@ class TransactionTile extends StatelessWidget {
                             fontSize: 12,
                             color: Colors.grey.shade500,
                             fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                      ),
+                    if (showAsOf)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2),
+                        child: Text(
+                          _asOfLabel(),
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Colors.grey.shade500,
                           ),
                         ),
                       ),
@@ -473,5 +536,30 @@ class TransactionTile extends StatelessWidget {
       'Dec',
     ];
     return '${months[date.month - 1]} ${date.day}, ${date.year}';
+  }
+
+  /// Day 0 of the current month is the last day of the previous one --
+  /// matches what the balance actually reflects, since 014's usage-delay
+  /// rule excludes the current month's not-yet-usable credit. Same
+  /// calculation as _OverallBalanceCard._asOfLabel on the Dashboard.
+  String _asOfLabel() {
+    const monthNames = [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
+    ];
+    final now = DateTime.now();
+    final lastDayOfPreviousMonth = DateTime(now.year, now.month, 0);
+    final month = monthNames[lastDayOfPreviousMonth.month - 1];
+    return 'as of $month ${lastDayOfPreviousMonth.day}, ${lastDayOfPreviousMonth.year}';
   }
 }

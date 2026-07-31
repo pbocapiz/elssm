@@ -26,6 +26,10 @@ const leaveCreditsGroupItems = [
 /// SidebarItems only shown to Admins and Approvers (accesslevel <= 2).
 const _approverAndAdminOnlyItems = [...leaveCreditsGroupItems, SidebarItem.members];
 
+/// SidebarItems only shown to Employees (accesslevel = 3) -- Approvers and
+/// Admins manage leave balances from Leave Records instead.
+const _employeeOnlyItems = [SidebarItem.leaveBalance];
+
 extension SidebarItemDetails on SidebarItem {
   String get label => switch (this) {
     SidebarItem.dashboard => 'Dashboard',
@@ -66,14 +70,16 @@ extension SidebarItemDetails on SidebarItem {
 
 /// Sidebar items visible for a given accesslevel (1=Admin, 2=Approver,
 /// 3=Employee). Only Admins and Approvers see the Leave Credits group
-/// (Starting Credits, Leave Records, Credit Report) and Members. Profile
-/// is excluded from this list -- it's still a valid SidebarItem (routed to
-/// from the sidebar's user footer, see onTapProfile in _UserFooter), it's
-/// just not shown as its own nav tile.
+/// (Starting Credits, Leave Records, Credit Report) and Members. Only
+/// Employees see Leave Balance -- Admins/Approvers manage leave balances
+/// from Leave Records instead. Profile is excluded from this list -- it's
+/// still a valid SidebarItem (routed to from the sidebar's user footer, see
+/// onTapProfile in _UserFooter), it's just not shown as its own nav tile.
 List<SidebarItem> sidebarItemsForAccessLevel(int accessLevel) => [
   for (final item in SidebarItem.values)
     if (item != SidebarItem.profile &&
-        (!_approverAndAdminOnlyItems.contains(item) || accessLevel <= 2))
+        (!_approverAndAdminOnlyItems.contains(item) || accessLevel <= 2) &&
+        (!_employeeOnlyItems.contains(item) || accessLevel == 3))
       item,
 ];
 
@@ -136,7 +142,7 @@ class AppSidebar extends StatelessWidget {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          'Your Leave, Your Access, Anytime, Anywhere',
+                          'Your Leave. Your Access. Anytime, Anywhere.',
                           style: TextStyle(
                             fontSize: 9,
                             fontStyle: FontStyle.italic,

@@ -4,6 +4,7 @@ class OfficeEmployeeBalance {
     required this.fullName,
     required this.employeeNo,
     required this.openingBalance,
+    required this.effectiveDate,
   });
 
   factory OfficeEmployeeBalance.fromMap(Map<String, dynamic> map) {
@@ -14,6 +15,9 @@ class OfficeEmployeeBalance {
       openingBalance: map['opening_balance'] == null
           ? 0
           : double.parse(map['opening_balance'].toString()),
+      effectiveDate: map['effective_date'] == null
+          ? null
+          : DateTime.parse(map['effective_date'] as String),
     );
   }
 
@@ -21,4 +25,8 @@ class OfficeEmployeeBalance {
   final String fullName;
   final String? employeeNo;
   final double openingBalance;
+
+  /// The date these credits are recorded as of -- null until an
+  /// Approver/Admin picks one for this employee's row.
+  final DateTime? effectiveDate;
 }

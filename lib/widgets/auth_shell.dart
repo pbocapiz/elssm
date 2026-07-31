@@ -91,7 +91,7 @@ class AuthHeader extends StatelessWidget {
         ),
         const SizedBox(height: 2),
         const Text(
-          'Your Leave, Your Access, Anytime, Anywhere',
+          'Your Leave. Your Access. Anytime, Anywhere.',
           textAlign: TextAlign.center,
           style: TextStyle(
             fontSize: 11,
