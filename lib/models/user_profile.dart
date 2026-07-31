@@ -8,6 +8,7 @@ class UserProfile {
     required this.firstName,
     required this.middleName,
     required this.lastName,
+    this.suffix,
     required this.email,
     required this.position,
     required this.officeName,
@@ -32,6 +33,7 @@ class UserProfile {
       firstName: (map['firstname'] as String?) ?? '',
       middleName: map['middlename'] as String?,
       lastName: (map['lastname'] as String?) ?? '',
+      suffix: map['suffix'] as String?,
       email: (map['email'] as String?) ?? '',
       position: (map['position'] as String?) ?? 'Employee',
       officeName: (map['officename'] as String?) ?? 'Unassigned Office',
@@ -54,6 +56,7 @@ class UserProfile {
   final String firstName;
   final String? middleName;
   final String lastName;
+  final String? suffix;
   final String email;
   final String position;
   final String officeName;
@@ -82,6 +85,7 @@ class UserProfile {
       firstName,
       middleName,
       lastName,
+      suffix,
     ].where((part) => part != null && part.trim().isNotEmpty);
     return parts.isEmpty ? 'Unnamed User' : parts.join(' ');
   }

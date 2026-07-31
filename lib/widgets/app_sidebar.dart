@@ -11,6 +11,7 @@ enum SidebarItem {
   manageStartingCredits,
   leaveRecords,
   leaveCreditReport,
+  reports,
   members,
   terminalLeaveCalculator,
 }
@@ -21,6 +22,7 @@ const leaveCreditsGroupItems = [
   SidebarItem.manageStartingCredits,
   SidebarItem.leaveRecords,
   SidebarItem.leaveCreditReport,
+  SidebarItem.reports,
 ];
 
 /// SidebarItems only shown to Admins and Approvers (accesslevel <= 2).
@@ -39,6 +41,7 @@ extension SidebarItemDetails on SidebarItem {
     SidebarItem.manageStartingCredits => 'Starting Credits',
     SidebarItem.leaveRecords => 'Leave Records',
     SidebarItem.leaveCreditReport => 'Credit Report',
+    SidebarItem.reports => 'Reports',
     SidebarItem.members => 'Members',
     SidebarItem.terminalLeaveCalculator => 'Terminal Leave Calculator',
   };
@@ -51,6 +54,7 @@ extension SidebarItemDetails on SidebarItem {
     SidebarItem.manageStartingCredits => Icons.edit_calendar_outlined,
     SidebarItem.leaveRecords => Icons.receipt_long_outlined,
     SidebarItem.leaveCreditReport => Icons.bar_chart_outlined,
+    SidebarItem.reports => Icons.file_download_outlined,
     SidebarItem.members => Icons.group_outlined,
     SidebarItem.terminalLeaveCalculator => Icons.calculate_outlined,
   };
@@ -63,6 +67,7 @@ extension SidebarItemDetails on SidebarItem {
     SidebarItem.manageStartingCredits => Icons.edit_calendar,
     SidebarItem.leaveRecords => Icons.receipt_long,
     SidebarItem.leaveCreditReport => Icons.bar_chart,
+    SidebarItem.reports => Icons.file_download,
     SidebarItem.members => Icons.group,
     SidebarItem.terminalLeaveCalculator => Icons.calculate,
   };
@@ -70,7 +75,7 @@ extension SidebarItemDetails on SidebarItem {
 
 /// Sidebar items visible for a given accesslevel (1=Admin, 2=Approver,
 /// 3=Employee). Only Admins and Approvers see the Leave Credits group
-/// (Starting Credits, Leave Records, Credit Report) and Members. Only
+/// (Starting Credits, Leave Records, Credit Report, Reports) and Members. Only
 /// Employees see Leave Balance -- Admins/Approvers manage leave balances
 /// from Leave Records instead. Profile is excluded from this list -- it's
 /// still a valid SidebarItem (routed to from the sidebar's user footer, see

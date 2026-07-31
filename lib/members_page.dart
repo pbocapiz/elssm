@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'models/member.dart';
 import 'services/member_service.dart';
+import 'services/profile_service.dart';
 import 'theme.dart';
 
 class MembersPage extends StatefulWidget {
@@ -271,16 +272,70 @@ class _EditMemberDialog extends StatefulWidget {
 }
 
 class _EditMemberDialogState extends State<_EditMemberDialog> {
+  late final _firstNameController = TextEditingController(
+    text: widget.member.firstName,
+  );
+  late final _middleNameController = TextEditingController(
+    text: widget.member.middleName ?? '',
+  );
+  late final _lastNameController = TextEditingController(
+    text: widget.member.lastName,
+  );
+  late final _suffixController = TextEditingController(
+    text: widget.member.suffix ?? '',
+  );
   late final _positionController = TextEditingController(
     text: widget.member.position,
   );
+  late final _employeeNoController = TextEditingController(
+    text: widget.member.employeeNo ?? '',
+  );
+  late final _employmentStatusController = TextEditingController(
+    text: widget.member.employmentStatus ?? '',
+  );
+  late final _divisionSectionController = TextEditingController(
+    text: widget.member.divisionSection ?? '',
+  );
+  late final _immediateSupervisorController = TextEditingController(
+    text: widget.member.immediateSupervisor ?? '',
+  );
+  late final _civilStatusController = TextEditingController(
+    text: widget.member.civilStatus ?? '',
+  );
+  late final _gsisNoController = TextEditingController(
+    text: widget.member.gsisNo ?? '',
+  );
+  late final _tinNoController = TextEditingController(
+    text: widget.member.tinNo ?? '',
+  );
+  late final _philhealthNoController = TextEditingController(
+    text: widget.member.philhealthNo ?? '',
+  );
+  late final _pagibigNoController = TextEditingController(
+    text: widget.member.pagibigNo ?? '',
+  );
+
   late int _accessLevel = widget.member.accessLevel;
   late bool _isActive = widget.member.isActive;
+  late DateTime? _dateHired = widget.member.dateHired;
   bool _isSaving = false;
 
   @override
   void dispose() {
+    _firstNameController.dispose();
+    _middleNameController.dispose();
+    _lastNameController.dispose();
+    _suffixController.dispose();
     _positionController.dispose();
+    _employeeNoController.dispose();
+    _employmentStatusController.dispose();
+    _divisionSectionController.dispose();
+    _immediateSupervisorController.dispose();
+    _civilStatusController.dispose();
+    _gsisNoController.dispose();
+    _tinNoController.dispose();
+    _philhealthNoController.dispose();
+    _pagibigNoController.dispose();
     super.dispose();
   }
 
@@ -292,7 +347,49 @@ class _EditMemberDialogState extends State<_EditMemberDialog> {
     _ => 'Employee',
   };
 
+  String? _blankToNull(String value) {
+    final trimmed = value.trim();
+    return trimmed.isEmpty ? null : trimmed;
+  }
+
+  Future<void> _pickDateHired() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _dateHired ?? DateTime.now(),
+      firstDate: DateTime(1950),
+      lastDate: DateTime.now(),
+    );
+    if (picked != null) setState(() => _dateHired = picked);
+  }
+
+  String _formatDate(DateTime date) {
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    return '${months[date.month - 1]} ${date.day}, ${date.year}';
+  }
+
   Future<void> _save() async {
+    final firstName = _firstNameController.text.trim();
+    final lastName = _lastNameController.text.trim();
+    if (firstName.isEmpty || lastName.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Enter a first and last name')),
+      );
+      return;
+    }
+
     final position = _positionController.text.trim();
     if (position.isEmpty) {
       ScaffoldMessenger.of(
@@ -305,10 +402,34 @@ class _EditMemberDialogState extends State<_EditMemberDialog> {
     try {
       await MemberService.updateMember(
         userId: widget.member.id,
+        firstName: firstName,
+        middleName: _blankToNull(_middleNameController.text),
+        lastName: lastName,
+        suffix: _blankToNull(_suffixController.text),
         position: position,
         accessLevel: _accessLevel,
         isActive: _isActive,
       );
+
+      final employeeId = widget.member.employeeId;
+      if (employeeId != null) {
+        await ProfileService.updateEmployment(
+          employeeId: employeeId,
+          employeeNo: _blankToNull(_employeeNoController.text),
+          employmentStatus: _blankToNull(_employmentStatusController.text),
+          civilStatus: _blankToNull(_civilStatusController.text),
+          gsisNo: _blankToNull(_gsisNoController.text),
+          tinNo: _blankToNull(_tinNoController.text),
+          dateHired: _dateHired,
+          divisionSection: _blankToNull(_divisionSectionController.text),
+          immediateSupervisor: _blankToNull(
+            _immediateSupervisorController.text,
+          ),
+          philhealthNo: _blankToNull(_philhealthNoController.text),
+          pagibigNo: _blankToNull(_pagibigNoController.text),
+        );
+      }
+
       if (!mounted) return;
       Navigator.of(context).pop(true);
     } catch (error) {
@@ -321,13 +442,44 @@ class _EditMemberDialogState extends State<_EditMemberDialog> {
     }
   }
 
+  InputDecoration _fieldDecoration(String label) => InputDecoration(
+    labelText: label,
+    isDense: true,
+    filled: true,
+    fillColor: const Color(0xFFF1F2F5),
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(14),
+      borderSide: BorderSide.none,
+    ),
+  );
+
+  Widget _sectionHeader(String title, IconData icon) {
+    return Row(
+      children: [
+        Icon(icon, size: 16, color: navyBlue),
+        const SizedBox(width: 6),
+        Text(
+          title.toUpperCase(),
+          style: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            color: navyBlue,
+            letterSpacing: 0.6,
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final isLinked = widget.member.employeeId != null;
+
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
       insetPadding: const EdgeInsets.all(24),
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 420),
+        constraints: const BoxConstraints(maxWidth: 460),
         child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
           child: Column(
@@ -356,20 +508,62 @@ class _EditMemberDialogState extends State<_EditMemberDialog> {
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 4),
               Text(
-                '${widget.member.fullName} — ${widget.member.email}',
+                widget.member.email,
                 style: TextStyle(fontSize: 12.5, color: Colors.grey.shade600),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 24),
+
+              _sectionHeader('Name', Icons.person_outline_rounded),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _firstNameController,
+                      decoration: _fieldDecoration('First Name'),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: TextField(
+                      controller: _lastNameController,
+                      decoration: _fieldDecoration('Last Name'),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _middleNameController,
+                      decoration: _fieldDecoration('Middle Name'),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: TextField(
+                      controller: _suffixController,
+                      decoration: _fieldDecoration('Suffix'),
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 24),
+              _sectionHeader('Account', Icons.badge_outlined),
+              const SizedBox(height: 12),
               TextField(
                 controller: _positionController,
-                decoration: const InputDecoration(labelText: 'Position'),
+                decoration: _fieldDecoration('Position'),
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 12),
               DropdownButtonFormField<int>(
                 initialValue: _accessLevel,
-                decoration: const InputDecoration(labelText: 'Access Level'),
+                decoration: _fieldDecoration('Access Level'),
                 items: [
                   for (final level in _accessLevelOptions)
                     DropdownMenuItem(
@@ -381,7 +575,7 @@ class _EditMemberDialogState extends State<_EditMemberDialog> {
                   if (level != null) setState(() => _accessLevel = level);
                 },
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 12),
               Container(
                 decoration: BoxDecoration(
                   color: const Color(0xFFF1F2F5),
@@ -405,6 +599,121 @@ class _EditMemberDialogState extends State<_EditMemberDialog> {
                   ),
                 ),
               ),
+
+              const SizedBox(height: 24),
+              _sectionHeader('Employment', Icons.work_outline_rounded),
+              const SizedBox(height: 12),
+              if (!isLinked)
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: taupe.withValues(alpha: 0.18),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Text(
+                    "This user isn't linked to an employee record yet, "
+                    'so employment details can\'t be edited here.',
+                    style: TextStyle(
+                      fontSize: 12.5,
+                      fontStyle: FontStyle.italic,
+                      color: Colors.grey.shade700,
+                    ),
+                  ),
+                )
+              else ...[
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _employeeNoController,
+                        decoration: _fieldDecoration('Employee No.'),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: TextField(
+                        controller: _employmentStatusController,
+                        decoration: _fieldDecoration('Employment Status'),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _divisionSectionController,
+                        decoration: _fieldDecoration('Division/Section'),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: TextField(
+                        controller: _immediateSupervisorController,
+                        decoration: _fieldDecoration(
+                          'Immediate Supervisor',
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _civilStatusController,
+                        decoration: _fieldDecoration('Civil Status'),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: TextField(
+                        controller: _gsisNoController,
+                        decoration: _fieldDecoration('GSIS No.'),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _philhealthNoController,
+                        decoration: _fieldDecoration('Philhealth No.'),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: TextField(
+                        controller: _pagibigNoController,
+                        decoration: _fieldDecoration('Pag-IBIG No.'),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _tinNoController,
+                  decoration: _fieldDecoration('TIN No.'),
+                ),
+                const SizedBox(height: 12),
+                InkWell(
+                  onTap: _isSaving ? null : _pickDateHired,
+                  borderRadius: BorderRadius.circular(14),
+                  child: InputDecorator(
+                    decoration: _fieldDecoration('Date Hired'),
+                    child: Text(
+                      _dateHired == null ? '—' : _formatDate(_dateHired!),
+                      style: const TextStyle(fontSize: 14),
+                    ),
+                  ),
+                ),
+              ],
+
               const SizedBox(height: 20),
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,

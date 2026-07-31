@@ -29,12 +29,18 @@ class MemberService {
         .eq('id', userId);
   }
 
-  /// Edits Position/Access Level/Status together, from the Members screen's
-  /// edit card. RLS scopes what a caller can actually change: Admins can
-  /// edit anyone, Approvers only accesslevel-3 employees in their own
-  /// office and only up to accesslevel 2 (see 023_approver_admin_edit_members.sql).
+  /// Edits Name/Position/Access Level/Status together, from the Members
+  /// screen's edit card. RLS scopes what a caller can actually change:
+  /// Admins can edit anyone, Approvers only accesslevel-3 employees in
+  /// their own office and only up to accesslevel 2 (see
+  /// 023_approver_admin_edit_members.sql) -- RLS scopes rows, not columns,
+  /// so name/suffix are covered by that same policy.
   static Future<void> updateMember({
     required String userId,
+    required String firstName,
+    String? middleName,
+    required String lastName,
+    String? suffix,
     required String position,
     required int accessLevel,
     required bool isActive,
@@ -42,6 +48,10 @@ class MemberService {
     await Supabase.instance.client
         .from('users')
         .update({
+          'firstname': firstName,
+          'middlename': middleName,
+          'lastname': lastName,
+          'suffix': suffix,
           'position': position,
           'accesslevel': accessLevel,
           'is_active': isActive,

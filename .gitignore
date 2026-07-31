@@ -1,3 +1,6 @@
+# Local-only: raw SQL migrations/schema, kept out of the (public) repo
+/supabase/
+
 # Miscellaneous
 *.class
 *.log

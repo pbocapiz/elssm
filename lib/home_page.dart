@@ -7,6 +7,7 @@ import 'leave_balance_page.dart';
 import 'leave_credit_report_page.dart';
 import 'leave_history_page.dart';
 import 'leave_records_page.dart';
+import 'leave_report_export_page.dart';
 import 'members_page.dart';
 import 'models/employee.dart';
 import 'opening_balance_management_page.dart';
@@ -184,6 +185,13 @@ class _ContentArea extends StatelessWidget {
       return Container(
         color: colorScheme.surface,
         child: const LeaveCreditReportPage(),
+      );
+    }
+
+    if (selected == SidebarItem.reports) {
+      return Container(
+        color: colorScheme.surface,
+        child: const LeaveReportExportPage(),
       );
     }
 
