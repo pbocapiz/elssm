@@ -188,7 +188,7 @@ class _AddDeductionDialogState extends State<_AddDeductionDialog> {
                           value: balance,
                           child: Text(
                             '${balance.fullName} '
-                            '(${balance.availableBalance.toStringAsFixed(2)} days left)',
+                            '(${balance.availableBalance.toStringAsFixed(3)} days left)',
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
@@ -205,7 +205,7 @@ class _AddDeductionDialogState extends State<_AddDeductionDialog> {
                   decimal: true,
                 ),
                 inputFormatters: [
-                  FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')),
+                  FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,3}')),
                 ],
                 decoration: const InputDecoration(
                   labelText: 'Days to Deduct',
