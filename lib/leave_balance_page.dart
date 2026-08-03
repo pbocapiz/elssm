@@ -152,14 +152,13 @@ class _OverallBalanceCard extends StatelessWidget {
     'December',
   ];
 
-  /// Day 0 of the current month is the last day of the previous one --
-  /// matches what the balance actually reflects, since 014's usage-delay
-  /// rule excludes the current month's not-yet-usable credit.
+  /// The balance is always current as of today -- 028 removed the
+  /// one-month usage-delay rule, so a credit posted this month already
+  /// counts.
   String get _asOfLabel {
     final now = DateTime.now();
-    final lastDayOfPreviousMonth = DateTime(now.year, now.month, 0);
-    final month = _monthNames[lastDayOfPreviousMonth.month - 1];
-    return 'as of $month ${lastDayOfPreviousMonth.day}, ${lastDayOfPreviousMonth.year}';
+    final month = _monthNames[now.month - 1];
+    return 'as of $month ${now.day}, ${now.year}';
   }
 
   @override

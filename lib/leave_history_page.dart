@@ -323,9 +323,8 @@ class TransactionTile extends StatelessWidget {
         transaction.sourceId != null &&
         (onApprove != null || onReject != null);
 
-    // Vacation/Sick Leave opening balances are subject to 014's usage-delay
-    // rule, so the figure shown isn't "as of Jan 1" like other opening
-    // balances -- it's as of the last day of the previous month, same as
+    // Vacation/Sick Leave opening balances show a running "as of today"
+    // figure instead of "as of Jan 1" like other opening balances, same as
     // the Dashboard's Total Leave Credits Earned card.
     final showAsOf =
         isOpeningBalance &&
@@ -538,10 +537,10 @@ class TransactionTile extends StatelessWidget {
     return '${months[date.month - 1]} ${date.day}, ${date.year}';
   }
 
-  /// Day 0 of the current month is the last day of the previous one --
-  /// matches what the balance actually reflects, since 014's usage-delay
-  /// rule excludes the current month's not-yet-usable credit. Same
-  /// calculation as _OverallBalanceCard._asOfLabel on the Dashboard.
+  /// The balance is always current as of today -- 028 removed the
+  /// one-month usage-delay rule, so a credit posted this month already
+  /// counts. Same calculation as _OverallBalanceCard._asOfLabel on the
+  /// Dashboard.
   String _asOfLabel() {
     const monthNames = [
       'January',
@@ -558,8 +557,7 @@ class TransactionTile extends StatelessWidget {
       'December',
     ];
     final now = DateTime.now();
-    final lastDayOfPreviousMonth = DateTime(now.year, now.month, 0);
-    final month = monthNames[lastDayOfPreviousMonth.month - 1];
-    return 'as of $month ${lastDayOfPreviousMonth.day}, ${lastDayOfPreviousMonth.year}';
+    final month = monthNames[now.month - 1];
+    return 'as of $month ${now.day}, ${now.year}';
   }
 }
