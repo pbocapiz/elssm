@@ -23,6 +23,7 @@ class _LeaveRecordsPageState extends State<LeaveRecordsPage> {
   late Future<List<LeaveType>> _leaveTypesFuture;
   LeaveType? _selectedLeaveType;
   int _selectedYear = DateTime.now().year;
+  int? _selectedEmployeeId;
   late Future<List<LeaveTransaction>> _transactionsFuture;
 
   @override
@@ -54,7 +55,7 @@ class _LeaveRecordsPageState extends State<LeaveRecordsPage> {
         title: Text('${verb[0].toUpperCase()}${verb.substring(1)} request?'),
         content: Text(
           '${transaction.employeeName} — ${transaction.leaveTypeName}, '
-          '${transaction.amount.abs().toStringAsFixed(2)} day(s).',
+          '${transaction.amount.abs().toStringAsFixed(3)} day(s).',
         ),
         actions: [
           TextButton(
@@ -113,7 +114,7 @@ class _LeaveRecordsPageState extends State<LeaveRecordsPage> {
         title: const Text('Remove this record?'),
         content: Text(
           '${transaction.employeeName} — ${transaction.leaveTypeName}, '
-          '${transaction.amount.abs().toStringAsFixed(2)} day(s). '
+          '${transaction.amount.abs().toStringAsFixed(3)} day(s). '
           'This cannot be undone.',
         ),
         actions: [
@@ -173,61 +174,109 @@ class _LeaveRecordsPageState extends State<LeaveRecordsPage> {
         children: [
           Padding(
             padding: const EdgeInsets.all(16),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  flex: 2,
-                  child: FutureBuilder<List<LeaveType>>(
-                    future: _leaveTypesFuture,
-                    builder: (context, snapshot) {
-                      final types = snapshot.data ?? const [];
-                      return DropdownButtonFormField<LeaveType?>(
-                        initialValue: _selectedLeaveType,
-                        isExpanded: true,
-                        decoration: const InputDecoration(
-                          labelText: 'Filter by Leave Type',
-                        ),
-                        items: [
-                          const DropdownMenuItem(
-                            value: null,
-                            child: Text('All Leave Types'),
-                          ),
-                          for (final type in types)
-                            DropdownMenuItem(
-                              value: type,
-                              child: Text(type.name),
+            child: FutureBuilder<List<LeaveTransaction>>(
+              future: _transactionsFuture,
+              builder: (context, snapshot) {
+                final employees = <int, String>{};
+                for (final transaction in snapshot.data ?? const []) {
+                  employees[transaction.employeeId] = transaction.employeeName;
+                }
+                final employeeEntries = employees.entries.toList()
+                  ..sort((a, b) => a.value.compareTo(b.value));
+
+                return Column(
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: DropdownButtonFormField<int?>(
+                            initialValue: _selectedEmployeeId,
+                            isExpanded: true,
+                            decoration: const InputDecoration(
+                              labelText: 'Filter by User',
                             ),
-                        ],
-                        onChanged: (type) {
-                          setState(() => _selectedLeaveType = type);
-                          _reload();
-                        },
-                      );
-                    },
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: DropdownButtonFormField<int>(
-                    initialValue: _selectedYear,
-                    decoration: const InputDecoration(labelText: 'Year'),
-                    items: [
-                      for (
-                        var y = DateTime.now().year - 2;
-                        y <= DateTime.now().year + 1;
-                        y++
-                      )
-                        DropdownMenuItem(value: y, child: Text('$y')),
-                    ],
-                    onChanged: (year) {
-                      if (year == null) return;
-                      setState(() => _selectedYear = year);
-                      _reload();
-                    },
-                  ),
-                ),
-              ],
+                            items: [
+                              const DropdownMenuItem(
+                                value: null,
+                                child: Text('All Users'),
+                              ),
+                              for (final entry in employeeEntries)
+                                DropdownMenuItem(
+                                  value: entry.key,
+                                  child: Text(
+                                    entry.value,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                            ],
+                            onChanged: (id) =>
+                                setState(() => _selectedEmployeeId = id),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          flex: 2,
+                          child: FutureBuilder<List<LeaveType>>(
+                            future: _leaveTypesFuture,
+                            builder: (context, snapshot) {
+                              final types = snapshot.data ?? const [];
+                              return DropdownButtonFormField<LeaveType?>(
+                                initialValue: _selectedLeaveType,
+                                isExpanded: true,
+                                decoration: const InputDecoration(
+                                  labelText: 'Filter by Leave Type',
+                                ),
+                                items: [
+                                  const DropdownMenuItem(
+                                    value: null,
+                                    child: Text('All Leave Types'),
+                                  ),
+                                  for (final type in types)
+                                    DropdownMenuItem(
+                                      value: type,
+                                      child: Text(type.name),
+                                    ),
+                                ],
+                                onChanged: (type) {
+                                  setState(() => _selectedLeaveType = type);
+                                  _reload();
+                                },
+                              );
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: DropdownButtonFormField<int>(
+                            initialValue: _selectedYear,
+                            decoration: const InputDecoration(
+                              labelText: 'Year',
+                            ),
+                            items: [
+                              for (
+                                var y = DateTime.now().year - 2;
+                                y <= DateTime.now().year + 1;
+                                y++
+                              )
+                                DropdownMenuItem(value: y, child: Text('$y')),
+                            ],
+                            onChanged: (year) {
+                              if (year == null) return;
+                              setState(() => _selectedYear = year);
+                              _reload();
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                );
+              },
             ),
           ),
           const Divider(height: 1),
@@ -248,7 +297,13 @@ class _LeaveRecordsPageState extends State<LeaveRecordsPage> {
                   );
                 }
 
-                final transactions = snapshot.data ?? const [];
+                final transactions = (snapshot.data ?? const [])
+                    .where(
+                      (transaction) =>
+                          _selectedEmployeeId == null ||
+                          transaction.employeeId == _selectedEmployeeId,
+                    )
+                    .toList();
                 if (transactions.isEmpty) {
                   return Center(
                     child: Text(
@@ -298,7 +353,7 @@ class _EditTransactionDialog extends StatefulWidget {
 
 class _EditTransactionDialogState extends State<_EditTransactionDialog> {
   late final _amountController = TextEditingController(
-    text: widget.transaction.amount.abs().toStringAsFixed(2),
+    text: widget.transaction.amount.abs().toStringAsFixed(3),
   );
   late final _remarksController = TextEditingController(
     text: widget.transaction.type == LeaveTransactionType.openingBalance
@@ -431,7 +486,7 @@ class _EditTransactionDialogState extends State<_EditTransactionDialog> {
                   decimal: true,
                 ),
                 inputFormatters: [
-                  FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')),
+                  FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,3}')),
                 ],
                 decoration: InputDecoration(labelText: _amountLabel),
               ),

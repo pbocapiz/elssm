@@ -426,7 +426,7 @@ class TransactionTile extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    '$sign${transaction.amount.toStringAsFixed(2)}',
+                    '$sign${transaction.amount.toStringAsFixed(3)}',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 15,

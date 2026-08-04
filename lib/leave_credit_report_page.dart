@@ -63,32 +63,6 @@ class _LeaveCreditReportPageState extends State<LeaveCreditReportPage> {
                   Row(
                     children: [
                       Expanded(
-                        child: DropdownButtonFormField<int>(
-                          initialValue: _selectedYear,
-                          decoration: const InputDecoration(
-                            labelText: 'Year',
-                          ),
-                          items: [
-                            for (
-                              var y = currentYear - 2;
-                              y <= currentYear + 1;
-                              y++
-                            )
-                              DropdownMenuItem(value: y, child: Text('$y')),
-                          ],
-                          onChanged: (year) {
-                            if (year == null) return;
-                            setState(() => _selectedYear = year);
-                            _reload();
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
                         child: DropdownButtonFormField<int?>(
                           initialValue: _selectedEmployeeId,
                           isExpanded: true,
@@ -113,7 +87,11 @@ class _LeaveCreditReportPageState extends State<LeaveCreditReportPage> {
                               setState(() => _selectedEmployeeId = id),
                         ),
                       ),
-                      const SizedBox(width: 12),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
                       Expanded(
                         child: DropdownButtonFormField<int?>(
                           initialValue: _selectedLeaveTypeId,
@@ -137,6 +115,28 @@ class _LeaveCreditReportPageState extends State<LeaveCreditReportPage> {
                           ],
                           onChanged: (id) =>
                               setState(() => _selectedLeaveTypeId = id),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: DropdownButtonFormField<int>(
+                          initialValue: _selectedYear,
+                          decoration: const InputDecoration(
+                            labelText: 'Year',
+                          ),
+                          items: [
+                            for (
+                              var y = currentYear - 2;
+                              y <= currentYear + 1;
+                              y++
+                            )
+                              DropdownMenuItem(value: y, child: Text('$y')),
+                          ],
+                          onChanged: (year) {
+                            if (year == null) return;
+                            setState(() => _selectedYear = year);
+                            _reload();
+                          },
                         ),
                       ),
                     ],

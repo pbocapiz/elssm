@@ -97,6 +97,7 @@ class _MembersPageState extends State<MembersPage> {
         builder: (context, snapshot) {
           final pendingCount = (snapshot.data ?? const [])
               .where((member) => !member.isActive)
+              .where((member) => _isAdmin || member.accessLevel != 1)
               .length;
 
           final fab = FloatingActionButton(
@@ -135,6 +136,7 @@ class _MembersPageState extends State<MembersPage> {
 
           final members = (snapshot.data ?? const [])
               .where((member) => !_pendingOnly || !member.isActive)
+              .where((member) => _isAdmin || member.accessLevel != 1)
               .toList();
 
           if (members.isEmpty) {

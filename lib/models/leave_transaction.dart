@@ -2,6 +2,7 @@ enum LeaveTransactionType { openingBalance, credit, deduction, application }
 
 class LeaveTransaction {
   const LeaveTransaction({
+    required this.employeeId,
     required this.employeeName,
     required this.leaveTypeId,
     required this.leaveTypeName,
@@ -23,6 +24,7 @@ class LeaveTransaction {
     };
 
     return LeaveTransaction(
+      employeeId: map['employee_id'] as int,
       employeeName: (map['employee_name'] as String?) ?? '',
       leaveTypeId: map['leave_type_id'] as int,
       leaveTypeName: map['leave_type_name'] as String,
@@ -35,6 +37,7 @@ class LeaveTransaction {
     );
   }
 
+  final int employeeId;
   final String employeeName;
   final int leaveTypeId;
   final String leaveTypeName;

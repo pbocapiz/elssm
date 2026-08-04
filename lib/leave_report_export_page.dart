@@ -202,32 +202,6 @@ class _LeaveCreditReportTabState extends State<_LeaveCreditReportTab> {
                   Row(
                     children: [
                       Expanded(
-                        child: DropdownButtonFormField<int>(
-                          initialValue: _selectedYear,
-                          decoration: const InputDecoration(
-                            labelText: 'Year',
-                          ),
-                          items: [
-                            for (
-                              var y = currentYear - 2;
-                              y <= currentYear + 1;
-                              y++
-                            )
-                              DropdownMenuItem(value: y, child: Text('$y')),
-                          ],
-                          onChanged: (year) {
-                            if (year == null) return;
-                            setState(() => _selectedYear = year);
-                            _reload();
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
                         child: DropdownButtonFormField<int?>(
                           initialValue: _selectedEmployeeId,
                           isExpanded: true,
@@ -252,7 +226,11 @@ class _LeaveCreditReportTabState extends State<_LeaveCreditReportTab> {
                               setState(() => _selectedEmployeeId = id),
                         ),
                       ),
-                      const SizedBox(width: 12),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
                       Expanded(
                         child: DropdownButtonFormField<int?>(
                           initialValue: _selectedLeaveTypeId,
@@ -276,6 +254,28 @@ class _LeaveCreditReportTabState extends State<_LeaveCreditReportTab> {
                           ],
                           onChanged: (id) =>
                               setState(() => _selectedLeaveTypeId = id),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: DropdownButtonFormField<int>(
+                          initialValue: _selectedYear,
+                          decoration: const InputDecoration(
+                            labelText: 'Year',
+                          ),
+                          items: [
+                            for (
+                              var y = currentYear - 2;
+                              y <= currentYear + 1;
+                              y++
+                            )
+                              DropdownMenuItem(value: y, child: Text('$y')),
+                          ],
+                          onChanged: (year) {
+                            if (year == null) return;
+                            setState(() => _selectedYear = year);
+                            _reload();
+                          },
                         ),
                       ),
                     ],
@@ -349,60 +349,72 @@ class _LeaveCreditReportTabState extends State<_LeaveCreditReportTab> {
                 builder: (context, constraints) {
                   return SingleChildScrollView(
                     padding: const EdgeInsets.all(16),
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(
-                        minWidth: constraints.maxWidth,
-                      ),
-                      child: DataTable(
-                        headingRowHeight: 56,
-                        headingRowColor: WidgetStateProperty.all(
-                          navyBlue.withValues(alpha: 0.06),
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          minWidth: constraints.maxWidth,
                         ),
-                        headingTextStyle: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 0.4,
-                          color: Colors.grey.shade600,
-                        ),
-                        dataTextStyle: const TextStyle(
-                          fontSize: 13,
-                          color: navyBlue,
-                        ),
-                        columns: const [
-                          DataColumn(label: Text('EMPLOYEE')),
-                          DataColumn(label: _TwoLineColumnLabel('LEAVE', 'TYPE')),
-                          DataColumn(label: Text('OPENING'), numeric: true),
-                          DataColumn(label: Text('EARNED'), numeric: true),
-                          DataColumn(label: Text('DEDUCTED'), numeric: true),
-                          DataColumn(label: Text('APPLIED'), numeric: true),
-                          DataColumn(label: Text('TOTAL'), numeric: true),
-                        ],
-                        rows: [
-                          for (final row in rows)
-                            DataRow(
-                              cells: [
-                                DataCell(Text(row.fullName)),
-                                DataCell(Text(row.leaveTypeName)),
-                                DataCell(
-                                  Text(row.openingBalance.toStringAsFixed(3)),
-                                ),
-                                DataCell(
-                                  Text(row.totalEarned.toStringAsFixed(3)),
-                                ),
-                                DataCell(
-                                  Text(row.totalDeducted.toStringAsFixed(3)),
-                                ),
-                                DataCell(
-                                  Text(row.totalApplied.toStringAsFixed(3)),
-                                ),
-                                DataCell(
-                                  Text(
-                                    row.availableBalance.toStringAsFixed(3),
-                                  ),
-                                ),
-                              ],
+                        child: DataTable(
+                          headingRowHeight: 72,
+                          headingRowColor: WidgetStateProperty.all(
+                            navyBlue.withValues(alpha: 0.06),
+                          ),
+                          headingTextStyle: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0.4,
+                            color: Colors.grey.shade600,
+                          ),
+                          dataTextStyle: const TextStyle(
+                            fontSize: 13,
+                            color: navyBlue,
+                          ),
+                          columns: const [
+                            DataColumn(label: Text('EMPLOYEE')),
+                            DataColumn(
+                              label: _TwoLineColumnLabel('LEAVE', 'TYPE'),
                             ),
-                        ],
+                            DataColumn(label: Text('OPENING'), numeric: true),
+                            DataColumn(label: Text('EARNED'), numeric: true),
+                            DataColumn(
+                              label: Text('DEDUCTED'),
+                              numeric: true,
+                            ),
+                            DataColumn(label: Text('APPLIED'), numeric: true),
+                            DataColumn(label: Text('TOTAL'), numeric: true),
+                          ],
+                          rows: [
+                            for (final row in rows)
+                              DataRow(
+                                cells: [
+                                  DataCell(Text(row.fullName)),
+                                  DataCell(Text(row.leaveTypeName)),
+                                  DataCell(
+                                    Text(
+                                      row.openingBalance.toStringAsFixed(3),
+                                    ),
+                                  ),
+                                  DataCell(
+                                    Text(row.totalEarned.toStringAsFixed(3)),
+                                  ),
+                                  DataCell(
+                                    Text(
+                                      row.totalDeducted.toStringAsFixed(3),
+                                    ),
+                                  ),
+                                  DataCell(
+                                    Text(row.totalApplied.toStringAsFixed(3)),
+                                  ),
+                                  DataCell(
+                                    Text(
+                                      row.availableBalance.toStringAsFixed(3),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                          ],
+                        ),
                       ),
                     ),
                   );
@@ -569,7 +581,6 @@ class _UserInformationReportTabState
                     ),
                     items: const [
                       DropdownMenuItem(value: null, child: Text('Everyone')),
-                      DropdownMenuItem(value: 1, child: Text('Admin')),
                       DropdownMenuItem(value: 2, child: Text('Approver')),
                       DropdownMenuItem(value: 3, child: Text('Employee')),
                     ],
@@ -645,55 +656,59 @@ class _UserInformationReportTabState
                 builder: (context, constraints) {
                   return SingleChildScrollView(
                     padding: const EdgeInsets.all(16),
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(
-                        minWidth: constraints.maxWidth,
-                      ),
-                      child: DataTable(
-                        headingRowColor: WidgetStateProperty.all(
-                          navyBlue.withValues(alpha: 0.06),
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          minWidth: constraints.maxWidth,
                         ),
-                        headingTextStyle: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 0.4,
-                          color: Colors.grey.shade600,
-                        ),
-                        dataTextStyle: const TextStyle(
-                          fontSize: 13,
-                          color: navyBlue,
-                        ),
-                        columns: const [
-                          DataColumn(label: Text('NAME')),
-                          DataColumn(label: Text('POSITION')),
-                          DataColumn(label: Text('OFFICE')),
-                          DataColumn(label: Text('ACCESS LEVEL')),
-                          DataColumn(label: Text('STATUS')),
-                          DataColumn(label: Text('DATE HIRED')),
-                        ],
-                        rows: [
-                          for (final member in members)
-                            DataRow(
-                              cells: [
-                                DataCell(Text(member.fullName)),
-                                DataCell(Text(member.position)),
-                                DataCell(Text(member.officeName)),
-                                DataCell(Text(member.accessLevelLabel)),
-                                DataCell(
-                                  Text(
-                                    member.isActive ? 'Active' : 'Pending',
+                        child: DataTable(
+                          headingRowHeight: 72,
+                          headingRowColor: WidgetStateProperty.all(
+                            navyBlue.withValues(alpha: 0.06),
+                          ),
+                          headingTextStyle: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0.4,
+                            color: Colors.grey.shade600,
+                          ),
+                          dataTextStyle: const TextStyle(
+                            fontSize: 13,
+                            color: navyBlue,
+                          ),
+                          columns: const [
+                            DataColumn(label: Text('NAME')),
+                            DataColumn(label: Text('POSITION')),
+                            DataColumn(label: Text('OFFICE')),
+                            DataColumn(label: Text('ACCESS LEVEL')),
+                            DataColumn(label: Text('STATUS')),
+                            DataColumn(label: Text('DATE HIRED')),
+                          ],
+                          rows: [
+                            for (final member in members)
+                              DataRow(
+                                cells: [
+                                  DataCell(Text(member.fullName)),
+                                  DataCell(Text(member.position)),
+                                  DataCell(Text(member.officeName)),
+                                  DataCell(Text(member.accessLevelLabel)),
+                                  DataCell(
+                                    Text(
+                                      member.isActive ? 'Active' : 'Pending',
+                                    ),
                                   ),
-                                ),
-                                DataCell(
-                                  Text(
-                                    member.dateHired == null
-                                        ? '—'
-                                        : _formatDate(member.dateHired!),
+                                  DataCell(
+                                    Text(
+                                      member.dateHired == null
+                                          ? '—'
+                                          : _formatDate(member.dateHired!),
+                                    ),
                                   ),
-                                ),
-                              ],
-                            ),
-                        ],
+                                ],
+                              ),
+                          ],
+                        ),
                       ),
                     ),
                   );
