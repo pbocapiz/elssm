@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'forgot_password_page.dart';
 import 'signup_page.dart';
 import 'theme.dart';
 import 'widgets/auth_shell.dart';
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+  const LoginPage({super.key, this.showPasswordUpdatedMessage = false});
+
+  /// Set by AuthGate for the one build right after a successful password
+  /// reset, so this page can surface a confirmation once.
+  final bool showPasswordUpdatedMessage;
 
   @override
   State<LoginPage> createState() => _LoginPageState();
@@ -18,6 +23,21 @@ class _LoginPageState extends State<LoginPage> {
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
   bool _isSubmitting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.showPasswordUpdatedMessage) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Password updated. Please sign in.'),
+          ),
+        );
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -83,6 +103,12 @@ class _LoginPageState extends State<LoginPage> {
     ).push(MaterialPageRoute(builder: (context) => const SignUpPage()));
   }
 
+  void _goToForgotPassword() {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (context) => const ForgotPasswordPage()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -143,7 +169,27 @@ class _LoginPageState extends State<LoginPage> {
                       return null;
                     },
                   ),
-                  const SizedBox(height: 28),
+                  const SizedBox(height: 4),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: _isSubmitting ? null : _goToForgotPassword,
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 6),
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      child: const Text(
+                        'Forgot password?',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: navyBlue,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
                   SizedBox(
                     width: double.infinity,
                     height: 50,
