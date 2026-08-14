@@ -1,6 +1,10 @@
 # Local-only: raw SQL migrations/schema, kept out of the (public) repo
 /supabase/
 
+# Local-only: real Supabase URL/key for --dart-define-from-file (see
+# dart_define.example.json for the template; CLAUDE.md for the run command)
+/dart_define.local.json
+
 # Miscellaneous
 *.class
 *.log

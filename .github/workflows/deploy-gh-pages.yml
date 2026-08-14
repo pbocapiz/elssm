@@ -31,7 +31,16 @@ jobs:
       # subpath, so the app's asset/base URLs must include the repo name --
       # web/index.html's <base href="$FLUTTER_BASE_HREF"> is what this flag
       # substitutes.
-      - run: flutter build web --release --base-href "/${{ github.event.repository.name }}/"
+      #
+      # SUPABASE_URL/SUPABASE_PUBLISHABLE_KEY are injected as compile-time
+      # constants (read via String.fromEnvironment in supabase_config.dart)
+      # from the repo's Actions secrets, so rotating the anon key only
+      # means updating the secret, not editing/committing code.
+      - run: >
+          flutter build web --release
+          --base-href "/${{ github.event.repository.name }}/"
+          --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_URL }}
+          --dart-define=SUPABASE_PUBLISHABLE_KEY=${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
 
       - uses: actions/configure-pages@v5
 
